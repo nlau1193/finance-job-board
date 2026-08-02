@@ -4,7 +4,13 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync, spawn } from "node:child_process";
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
+
+const browserEngines = { chromium, firefox, webkit };
+const browserName = process.env.PW_BROWSER || "chromium";
+if (!Object.hasOwn(browserEngines, browserName)) {
+  throw new Error(`Unsupported PW_BROWSER=${browserName}; choose chromium, firefox, or webkit`);
+}
 
 const sourceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const runRoot = mkdtempSync(path.join(tmpdir(), "jobboard-e2e-"));
@@ -65,7 +71,7 @@ process.once("SIGTERM", () => { stopServer(); process.exit(143); });
 
 try {
   await waitForServer();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await browserEngines[browserName].launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -258,8 +264,15 @@ try {
   assert.equal(await page.evaluate(() => document.activeElement?.id), "detail-back");
   for (let i = 0; i < 5; i += 1) {
     await page.keyboard.press("Tab");
-    assert.equal(await page.locator("#detail").evaluate((detail) => detail.contains(document.activeElement)), true,
-      "mobile detail focus must remain trapped");
+    const focusState = await page.locator("#detail").evaluate((detail) => ({
+      inside: detail.contains(document.activeElement),
+      active: document.activeElement?.id || document.activeElement?.tagName || null,
+      focusables: [...detail.querySelectorAll("button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])")]
+        .filter((el) => !el.closest("[hidden]") && el.offsetParent !== null)
+        .map((el) => el.id || el.tagName),
+    }));
+    assert.equal(focusState.inside, true,
+      `mobile detail focus must remain trapped: ${JSON.stringify(focusState)}`);
   }
   await page.screenshot({ path: path.join(artifactDir, "mobile-detail.png"), fullPage: true });
   // Widening an open mobile sheet must leave modal mode behind. The desktop

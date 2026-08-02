@@ -330,3 +330,20 @@ The product and README remain category-neutral (**Job Hunt Board**); the
 GitHub slug is still `finance-job-board` because rename/admin permission is an
 owner-controlled gate. The older 188/200/201/205 test counts above are retained
 as history and should not be read as the current release proof.
+
+## Cross-browser accessibility receipt — 2026-08-02
+
+Thermo/Ponytail kept one browser-smoke owner and parameterized it with
+`PW_BROWSER`; the workflow now exercises Chromium, Firefox, and WebKit instead
+of quietly treating Chromium as the whole browser contract.
+
+- `PW_BROWSER=chromium npm run test:e2e`: **green**.
+- `PW_BROWSER=firefox npm run test:e2e`: **green**.
+- `PW_BROWSER=webkit npm run test:e2e`: **green**.
+- WebKit reproduced a real modal focus escape: after opening the mobile detail
+  sheet, native Tab moved focus to `BODY`. The modal now owns every Tab and
+  Shift+Tab transition, preserving the keyboard-trap invariant without adding
+  a second focus system. The E2E failure message records the active element and
+  visible focusables for future diagnosis.
+- The existing local-only, exact-Apply-link, no-paid-provider boundaries are
+  unchanged. This is a narrow accessibility fix, not a visual redesign.

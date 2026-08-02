@@ -707,12 +707,15 @@
         var detailBack = $("detail-back");
         if (detailBack) detailBack.focus();
       } else {
-        var detailFirst = detailFocusables[0], detailLast = detailFocusables[detailFocusables.length - 1];
-        if (e.shiftKey && (document.activeElement === detailFirst || !detailEl.contains(document.activeElement))) {
-          e.preventDefault(); detailLast.focus();
-        } else if (!e.shiftKey && (document.activeElement === detailLast || !detailEl.contains(document.activeElement))) {
-          e.preventDefault(); detailFirst.focus();
-        }
+        // Own every transition instead of relying on the browser's native tab
+        // order. WebKit can move from a focused button to BODY when full
+        // keyboard access is unavailable; a modal must never expose that gap.
+        var detailIndex = detailFocusables.indexOf(document.activeElement);
+        var detailNext = e.shiftKey
+          ? (detailIndex <= 0 ? detailFocusables.length - 1 : detailIndex - 1)
+          : (detailIndex < 0 || detailIndex === detailFocusables.length - 1 ? 0 : detailIndex + 1);
+        e.preventDefault();
+        detailFocusables[detailNext].focus();
       }
       return;
     }

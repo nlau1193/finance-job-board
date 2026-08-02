@@ -25,6 +25,10 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    name: browser (${{ matrix.browser }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,6 +41,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: ./jobs setup
-      - run: npm run test:e2e
+      - run: PW_BROWSER=${{ matrix.browser }} npm run test:e2e
