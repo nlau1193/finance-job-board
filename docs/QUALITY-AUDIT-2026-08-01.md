@@ -114,11 +114,13 @@ and removed optional tooling. This is not a current-tree credential leak, but it
 means a strict Nicole-only history claim is not proven. Repository rename or
 delete/recreate is an owner-controlled privacy decision, not a source-code gate.
 
-The LinkedIn arm remains opt-in and read-only for installations that explicitly
-choose it. It is not required for the core board, refresh, or Apply links. Lower
-risk follow-ups remain the same: fuller description search, visible refresh-feed
-caps, two-tab conflict messaging, overlay pruning, and a live ATS check outside
-the fixture-backed CI run.
+Historical note: that earlier review described an opt-in LinkedIn automation arm.
+The current public cut deleted that automation. It keeps only an optional local
+Connections CSV match and ordinary LinkedIn search links; neither is required
+for the core board, refresh, or Apply links. Lower-risk follow-ups remain the
+same: fuller description search, visible refresh-feed caps, two-tab conflict
+messaging, overlay pruning, and a live ATS check outside the fixture-backed CI
+run.
 
 ### Fresh proof
 
