@@ -924,6 +924,17 @@ def cmd_configure(args) -> int:
     interactive = getattr(args, "interactive", False) or (
         not updates and not getattr(args, "reset", False)
     )
+    # ``./jobs configure`` is intentionally a friendly prompt in a terminal,
+    # but setup agents and CI often invoke it without stdin attached.  Calling
+    # ``input()`` there raises an opaque EOFError and leaves a new install
+    # looking broken.  Keep the no-argument command useful in both contexts:
+    # print the current profile below and let a person re-run with
+    # ``--interactive`` (or explicit flags) when they have a terminal.
+    if interactive and not hasattr(args, "input_fn") and not sys.stdin.isatty():
+        warn("No interactive terminal detected; showing the current search.")
+        say("  Run `./jobs configure --interactive` in a terminal, or pass "
+            "--titles/--locations/--companies explicitly to change it.")
+        interactive = False
     if not updates and not getattr(args, "reset", False) and interactive:
         ask = getattr(args, "input_fn", input)
         say("Press Enter to keep the current value.")

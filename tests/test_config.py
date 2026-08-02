@@ -121,6 +121,21 @@ def test_bare_configure_runs_plain_english_setup(tmp_path, monkeypatch):
     assert saved["referral_bio"] == "I work in finance"
 
 
+def test_bare_configure_without_terminal_shows_profile_instead_of_eof(tmp_path, monkeypatch, capsys):
+    _isolate_search(tmp_path, monkeypatch)
+
+    class NonInteractiveStdin:
+        def isatty(self):
+            return False
+
+    monkeypatch.setattr(jobs.sys, "stdin", NonInteractiveStdin())
+    assert jobs.cmd_configure(_config_args()) == 0
+
+    output = capsys.readouterr().out
+    assert "No interactive terminal detected" in output
+    assert "Run `./jobs configure --interactive`" in output
+
+
 def test_configure_rejects_negative_age(tmp_path, monkeypatch):
     _isolate_search(tmp_path, monkeypatch)
     assert jobs.cmd_configure(_config_args(max_age=-1)) == 1
