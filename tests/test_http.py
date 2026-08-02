@@ -81,3 +81,18 @@ def test_corrupt_cache_timestamp_is_a_miss(monkeypatch, tmp_path):
     value = http.get_json("https://x/jobs", session=session)
     assert value["call"] == 1
     assert session.calls == 1
+
+
+def test_nonfinite_and_future_cache_timestamps_are_misses(monkeypatch, tmp_path):
+    monkeypatch.setattr(http, "CACHE_DIR", tmp_path)
+    path = http._cache_path("https://x/jobs")
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    path.write_text('{"fetched_epoch":NaN,"payload":{"old":true}}', encoding="utf-8")
+    assert http._read_cache(path, 3600) is None
+
+    path.write_text('{"fetched_epoch":1e30,"payload":{"old":true}}', encoding="utf-8")
+    assert http._read_cache(path, 3600) is None
+
+    path.write_text('{"fetched_epoch":' + "9" * 500 + ',"payload":{"old":true}}', encoding="utf-8")
+    assert http._read_cache(path, 3600) is None

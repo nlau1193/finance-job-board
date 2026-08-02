@@ -26,13 +26,20 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
         return [], receipt
 
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    if not isinstance(jobs, list):
+        jobs = []
     opportunities: list[Opportunity] = []
+    malformed = 0
     for job in jobs:
         opp = _to_opportunity(job, company, slug)
         if opp is not None:
             opportunities.append(opp)
+        else:
+            malformed += 1
 
     receipt.update(result="ok", count=len(opportunities), raw=len(jobs))
+    if malformed:
+        receipt["dropped_malformed"] = malformed
     return opportunities, receipt
 
 
@@ -43,13 +50,24 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
     if job.get("isListed") is False:
         return None
     job_id = str(job.get("id") or "").strip()
-    url = (job.get("jobUrl") or job.get("applyUrl") or "").strip()
-    title = (job.get("title") or "").strip()
+    raw_url = job.get("jobUrl") or job.get("applyUrl") or ""
+    raw_title = job.get("title") or ""
+    if not isinstance(raw_url, str) or not isinstance(raw_title, str):
+        return None
+    url = raw_url.strip()
+    title = raw_title.strip()
     if not (job_id and url and title):
         return None
 
-    location = (job.get("location") or "").strip()
-    department = (job.get("department") or "").strip() or None
+    raw_location = job.get("location") or ""
+    raw_department = job.get("department") or ""
+    raw_team = job.get("team") or ""
+    raw_compensation = job.get("compensationTierSummary") or ""
+    if not all(isinstance(value, str)
+               for value in (raw_location, raw_department, raw_team, raw_compensation)):
+        return None
+    location = raw_location.strip()
+    department = raw_department.strip() or None
     return Opportunity(
         id=Opportunity.make_id("ashby", slug, job_id),
         company=company.get("name", slug),
@@ -66,6 +84,6 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
         description_html=clean_description(job.get("descriptionHtml")),
         employment_type=normalize_employment(job.get("employmentType")),
         workplace_type=normalize_workplace(job.get("workplaceType")),
-        team=(job.get("team") or "").strip() or None,
-        compensation=(job.get("compensationTierSummary") or "").strip() or None,
+        team=raw_team.strip() or None,
+        compensation=raw_compensation.strip() or None,
     )

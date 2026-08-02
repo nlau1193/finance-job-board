@@ -32,13 +32,20 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
         return [], receipt
 
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    if not isinstance(jobs, list):
+        jobs = []
     opportunities: list[Opportunity] = []
+    malformed = 0
     for job in jobs:
         opp = _to_opportunity(job, company, slug)
         if opp is not None:
             opportunities.append(opp)
+        else:
+            malformed += 1
 
     receipt.update(result="ok", count=len(opportunities), raw=len(jobs))
+    if malformed:
+        receipt["dropped_malformed"] = malformed
     return opportunities, receipt
 
 
@@ -46,12 +53,22 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
     if not isinstance(job, dict):
         return None
     job_id = str(job.get("id") or job.get("internal_job_id") or "").strip()
-    url = (job.get("absolute_url") or "").strip()
-    title = (job.get("title") or "").strip()
+    raw_url = job.get("absolute_url") or ""
+    raw_title = job.get("title") or ""
+    if not isinstance(raw_url, str) or not isinstance(raw_title, str):
+        return None
+    url = raw_url.strip()
+    title = raw_title.strip()
     if not (job_id and url and title):
         return None
 
-    location = ((job.get("location") or {}).get("name") or "").strip()
+    location_data = job.get("location") or {}
+    if not isinstance(location_data, dict):
+        return None
+    raw_location = location_data.get("name") or ""
+    if not isinstance(raw_location, str):
+        return None
+    location = raw_location.strip()
     posted = job.get("first_published") or job.get("updated_at")
     return Opportunity(
         id=Opportunity.make_id("greenhouse", slug, job_id),
@@ -71,6 +88,10 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
 
 def _department(job: dict) -> str | None:
     """Join the posting's department names ("Product / Design"), or None."""
-    names = [str(d.get("name")).strip() for d in job.get("departments") or []
-             if isinstance(d, dict) and d.get("name") and str(d.get("name")).strip()]
+    departments = job.get("departments") or []
+    if not isinstance(departments, list):
+        return None
+    names = [d.get("name").strip() for d in departments
+             if isinstance(d, dict) and isinstance(d.get("name"), str)
+             and d.get("name").strip()]
     return " / ".join(names) or None

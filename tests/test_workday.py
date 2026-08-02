@@ -7,6 +7,8 @@ receipt when a company lacks host/tenant/site config.
 
 from datetime import datetime, timezone
 
+import pytest
+
 from jobhunt.ats import workday
 from jobhunt.model import is_actionable_url
 
@@ -134,6 +136,44 @@ def test_fetch_uses_broad_search_by_default(monkeypatch):
     assert len(opps) == 1
     assert receipt["result"] == "ok"
     assert seen[0]["searchText"] == ""
+
+
+@pytest.mark.parametrize(
+    "field,bad_value",
+    [
+        ("bulletFields", {"bad": "shape"}),
+        ("externalPath", 123),
+        ("title", 123),
+        ("locationsText", {"bad": "shape"}),
+    ],
+)
+def test_fetch_skips_malformed_posting_without_poisoning_feed(
+    monkeypatch, field, bad_value
+):
+    bad = {
+        "title": "Bad",
+        "externalPath": "/job/US-NY/Bad_R1",
+        "locationsText": "New York, NY",
+        "bulletFields": ["R1"],
+    }
+    bad[field] = bad_value
+    good = {
+        "title": "Good",
+        "externalPath": "/job/US-NY/Good_R2",
+        "locationsText": "New York, NY",
+        "bulletFields": ["R2"],
+    }
+
+    monkeypatch.setattr(
+        workday,
+        "post_json",
+        lambda url, body, **kwargs: {"total": 2, "jobPostings": [bad, good]},
+    )
+    opps, receipt = workday.fetch(WORKDAY, use_cache=False)
+
+    assert [opp.title for opp in opps] == ["Good"]
+    assert receipt["raw"] == 2
+    assert receipt["dropped_malformed"] == 1
 
 
 def test_fetch_accepts_deduplicated_custom_search_terms(monkeypatch):

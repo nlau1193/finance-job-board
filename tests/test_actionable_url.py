@@ -71,3 +71,9 @@ def test_lookalike_ats_hosts_and_generic_numeric_urls_are_not_actionable():
     assert not is_actionable_url(
         "https://evilmyworkdayjobs.com/foo/job/x")
     assert not is_actionable_url("https://evil.example/jobs/12345")
+
+
+def test_query_id_must_be_numeric_and_workday_host_boundary_is_strict():
+    assert not is_actionable_url("https://evil.example/?gh_jid=javascript:alert(1)")
+    assert not is_actionable_url("https://evil.example/?gh_jid=not-a-number")
+    assert not is_actionable_url("https://evil-myworkdayjobs.com/foo/job/x")

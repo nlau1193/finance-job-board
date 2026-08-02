@@ -52,12 +52,17 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
 
     jobs = data if isinstance(data, list) else []
     opportunities: list[Opportunity] = []
+    malformed = 0
     for job in jobs:
         opp = _to_opportunity(job, company, slug)
         if opp is not None:
             opportunities.append(opp)
+        else:
+            malformed += 1
 
     receipt.update(result="ok", count=len(opportunities), raw=len(jobs))
+    if malformed:
+        receipt["dropped_malformed"] = malformed
     return opportunities, receipt
 
 
@@ -65,25 +70,46 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
     if not isinstance(job, dict):
         return None
     job_id = str(job.get("id") or "").strip()
-    url = (job.get("hostedUrl") or "").strip()
-    title = (job.get("text") or "").strip()
+    raw_url = job.get("hostedUrl") or ""
+    raw_title = job.get("text") or ""
+    if not isinstance(raw_url, str) or not isinstance(raw_title, str):
+        return None
+    url = raw_url.strip()
+    title = raw_title.strip()
     if not (job_id and url and title):
         return None
 
     categories = job.get("categories") or {}
-    location = (categories.get("location") or "").strip()
-    department = (categories.get("team") or categories.get("department") or "").strip() or None
-    workplace = (job.get("workplaceType") or "").lower()
+    if not isinstance(categories, dict):
+        return None
+    raw_location = categories.get("location") or ""
+    raw_department = categories.get("team") or categories.get("department") or ""
+    raw_workplace = job.get("workplaceType") or ""
+    if not all(isinstance(value, str)
+               for value in (raw_location, raw_department, raw_workplace)):
+        return None
+    location = raw_location.strip()
+    department = raw_department.strip() or None
+    workplace = raw_workplace.lower()
 
     # Lever splits the body across `description` (intro HTML) + `lists`
     # (structured sections like Responsibilities). Reassemble both.
     body = job.get("description") or job.get("descriptionPlain") or ""
+    if not isinstance(body, str):
+        body = ""
     parts = [body]
-    for section in job.get("lists") or []:
+    sections = job.get("lists") or []
+    if not isinstance(sections, list):
+        sections = []
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
         # NOTE: use a distinct name — reusing `title` here clobbered the job
         # title with the last section heading (e.g. "Qualifications:").
-        heading = (section.get("text") or "").strip()
-        content = section.get("content") or ""
+        raw_heading = section.get("text") or ""
+        raw_content = section.get("content") or ""
+        heading = raw_heading.strip() if isinstance(raw_heading, str) else ""
+        content = raw_content if isinstance(raw_content, str) else ""
         if heading:
             parts.append(f"<h4>{heading}</h4>")
         if content:

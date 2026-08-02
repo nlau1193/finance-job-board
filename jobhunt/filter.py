@@ -202,9 +202,9 @@ class Profile:
             json.loads(Path(path).read_text(encoding="utf-8"))
         )
         return cls(
-            title_keywords=[s.lower() for s in data.get("title_keywords", [])],
-            title_exclude=[s.lower() for s in data.get("title_exclude", [])],
-            locations=[s.lower() for s in data.get("locations", [])],
+            title_keywords=[s.strip().lower() for s in data.get("title_keywords", [])],
+            title_exclude=[s.strip().lower() for s in data.get("title_exclude", [])],
+            locations=[s.strip().lower() for s in data.get("locations", [])],
             remote_ok=data.get("remote_ok", True),
             max_age_days=data.get("max_age_days", 30) or 0,
         )
@@ -316,14 +316,14 @@ def title_matches(opp: Opportunity, profile: Profile) -> bool:
     department = (opp.department or "").lower()
 
     if not profile.title_keywords:
-        return not any(_has_word(title, term) for term in profile.title_exclude)
+        return not any(_keyword_matches(title, term) for term in profile.title_exclude)
 
     # Title-driven match: keyword in the title, excludes judged on the title.
     # Excludes are word-boundary matched so "intern" doesn't kill "Internal
     # Audit" and "engineer" doesn't kill a role whose title merely names its
     # partner organization. The department deliberately can't veto a clean title.
     if title:
-        if any(_has_word(title, term) for term in profile.title_exclude):
+        if any(_keyword_matches(title, term) for term in profile.title_exclude):
             return False
         if any(_keyword_matches(title, term) for term in profile.title_keywords):
             return True
@@ -333,7 +333,7 @@ def title_matches(opp: Opportunity, profile: Profile) -> bool:
     # sentence/heading junk; every short title is a valid kind of job title.
     if not department or not any(_keyword_matches(department, term) for term in profile.title_keywords):
         return False
-    if any(_has_word(department, term) for term in profile.title_exclude):
+    if any(_keyword_matches(department, term) for term in profile.title_exclude):
         return False
     return True
 
@@ -371,14 +371,15 @@ def location_verdict(opp: Opportunity, profile: Profile) -> str:
     - "drop":  foreign-only or otherwise not US-relevant.
     """
     loc = (opp.location or "").lower()
-    if any(term.strip().lower() in {"all", "any"} for term in profile.locations):
+    configured_locations = [term.strip().lower() for term in profile.locations if isinstance(term, str)]
+    if any(term in {"all", "any"} for term in configured_locations):
         return "keep"
     if not loc:
         # No location string at all — surface the match; the human confirms.
         return "keep"
 
     configured = [
-        term for term in profile.locations
+        term for term in configured_locations
         if term and term != "remote"
     ]
     if any(_has_word(loc, term) for term in configured):

@@ -210,6 +210,8 @@ def enrich_all(filtered: list[Opportunity], raw_all: list[Opportunity], *,
     if Path(MOMENTUM_SNAPSHOT).exists():
         try:
             prev = json.loads(Path(MOMENTUM_SNAPSHOT).read_text(encoding="utf-8"))
+            if not isinstance(prev, dict):
+                prev = {}
         except (ValueError, OSError):
             prev = {}
 

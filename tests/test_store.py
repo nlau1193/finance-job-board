@@ -54,6 +54,172 @@ def test_save_and_load_roundtrip(tmp_path):
     assert {o.id for o in loaded} == {"greenhouse:acme:1", "greenhouse:acme:2"}
 
 
+def test_load_drops_corrupt_rows_and_records_recovery_warning(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [null, '
+        '{"id": "ok", "company": "Acme", "title": "Role", '
+        '"location": "Remote", "url": "https://boards.greenhouse.io/acme/jobs/1", '
+        '"ats": "greenhouse", "company_slug": "acme", "job_id": "1"}]}',
+        encoding="utf-8",
+    )
+    data = store.load(path)
+    assert [item["id"] for item in data["opportunities"]] == ["ok"]
+    assert data["meta"]["recovery_warnings"] == ["Skipped 1 invalid stored posting row(s)"]
+    assert store.load_opportunities(path)[0].id == "ok"
+
+
+def test_load_drops_non_actionable_live_rows_but_keeps_demo_rows(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"bad",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"","ats":"greenhouse","company_slug":"acme","job_id":"1"}]}',
+        encoding="utf-8",
+    )
+    assert store.load(path)["opportunities"] == []
+
+    demo = tmp_path / "demo.json"
+    demo.write_text(
+        '{"version": 1, "meta": {"sample": true}, "opportunities": [{"id":"demo",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"","ats":"greenhouse","company_slug":"acme","job_id":"1"}]}',
+        encoding="utf-8",
+    )
+    assert store.load(demo)["opportunities"][0]["id"] == "demo"
+
+
+def test_string_false_sample_marker_cannot_authorize_empty_apply_url(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {"sample": "false"}, "opportunities": [{"id":"demo",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"","ats":"greenhouse","company_slug":"acme","job_id":"1"}]}',
+        encoding="utf-8",
+    )
+
+    data = store.load(path)
+
+    assert data["opportunities"] == []
+    assert any("invalid stored posting" in warning
+               for warning in data["meta"]["recovery_warnings"])
+
+
+def test_load_drops_rows_with_unrenderable_nested_state(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"bad",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"https://boards.greenhouse.io/acme/jobs/1",'
+        '"ats":"greenhouse","company_slug":"acme","job_id":"1",'
+        '"application":{"prompts":"oops"}}]}',
+        encoding="utf-8",
+    )
+    assert store.load(path)["opportunities"] == []
+
+
+def test_load_repairs_malformed_form_and_warm_entries(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"ok",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"https://boards.greenhouse.io/acme/jobs/1",'
+        '"ats":"greenhouse","company_slug":"acme","job_id":"1",'
+        '"application":{"prompts":[null,{"label":"Why Acme?"}],'
+        '"gates":[{"label":"Work authorization"},"bad"]},'
+        '"enrichment":{"application":{"effort":"light"},'
+        '"warm":{"count":2,"people":[null,{"name":"Alex","position":"Finance"}]}}}]}',
+        encoding="utf-8",
+    )
+
+    data = store.load(path)
+    row = data["opportunities"][0]
+    assert row["application"]["prompts"] == [{"label": "Why Acme?"}]
+    assert row["application"]["gates"] == [{"label": "Work authorization"}]
+    assert row["enrichment"]["warm"]["people"] == [{"name": "Alex", "position": "Finance"}]
+    assert any("malformed" in warning for warning in data["meta"]["recovery_warnings"])
+
+    # The repaired payload is safe to pass to the self-contained renderer.
+    from jobhunt.board import render
+    out = tmp_path / "board.html"
+    render(data, out_path=out)
+    assert out.exists()
+
+
+def test_load_repairs_non_list_warm_people(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"ok",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"https://boards.greenhouse.io/acme/jobs/1",'
+        '"ats":"greenhouse","company_slug":"acme","job_id":"1",'
+        '"enrichment":{"warm":{"count":1,"people":"oops"}}}]}',
+        encoding="utf-8",
+    )
+    row = store.load(path)["opportunities"][0]
+    assert row["enrichment"]["warm"] == {"count": 0, "people": []}
+
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"bad",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"https://boards.greenhouse.io/acme/jobs/1",'
+        '"ats":"greenhouse","company_slug":"acme","job_id":"1",'
+        '"enrichment":{"application":{"flags":"oops"}}}]}',
+        encoding="utf-8",
+    )
+    assert store.load(path)["opportunities"] == []
+
+
+def test_load_repairs_malformed_fit_lists_and_renders(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"ok",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"https://boards.greenhouse.io/acme/jobs/1",'
+        '"ats":"greenhouse","company_slug":"acme","job_id":"1",'
+        '"enrichment":{"fit":{"bucket":"APPLY",'
+        '"why":"not-a-list","red_flags":[" senior ",4,""],'
+        '"missing":[null," CPA "]}}}]}',
+        encoding="utf-8",
+    )
+
+    data = store.load(path)
+    fit = data["opportunities"][0]["enrichment"]["fit"]
+    assert fit["why"] == []
+    assert fit["red_flags"] == ["senior"]
+    assert fit["missing"] == ["CPA"]
+    assert any("malformed fit" in warning for warning in data["meta"]["recovery_warnings"])
+
+    # The repaired fit arrays are safe for the board's `.map(...)` rendering.
+    from jobhunt.board import render
+    out = tmp_path / "board.html"
+    render(data, out_path=out)
+    assert out.exists()
+
+
+def test_load_resets_corrupt_metadata_shape(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text('{"version": 1, "meta": [], "opportunities": []}', encoding="utf-8")
+    data = store.load(path)
+    assert data["meta"]["recovery_warnings"] == ["Reset invalid board metadata"]
+
+
+def test_load_resets_corrupt_metadata_lists(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {"errors": "oops", "warnings": "oops"}, '
+        '"opportunities": []}',
+        encoding="utf-8",
+    )
+    data = store.load(path)
+    assert data["meta"]["errors"] == []
+    assert data["meta"]["warnings"] == []
+    assert data["meta"]["recovery_warnings"] == [
+        "Reset invalid board metadata field 'errors'",
+        "Reset invalid board metadata field 'warnings'",
+    ]
+
+
 def test_sort_unread_first(tmp_path):
     a, b = opp("1"), opp("2")
     a.read = True

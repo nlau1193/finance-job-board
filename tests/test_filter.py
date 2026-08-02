@@ -310,6 +310,24 @@ def test_empty_title_keywords_include_any_role_and_honor_excludes():
     assert not title_matches(opp("Software Engineering Intern"), broad)
 
 
+def test_profile_terms_strip_whitespace_and_punctuation_excludes_match():
+    from jobhunt.filter import Profile
+
+    config = Profile(title_exclude=[" intern ", "C++", "C#", "Node.js", "R&D"])
+    assert not title_matches(opp("Software Intern"), config)
+    assert not title_matches(opp("Senior C++ Engineer"), config)
+    assert not title_matches(opp("Senior C# Engineer"), config)
+    assert not title_matches(opp("Node.js Developer"), config)
+    assert not title_matches(opp("R&D Manager"), config)
+
+
+def test_profile_location_terms_strip_whitespace():
+    from jobhunt.filter import Profile
+
+    config = Profile(locations=[" New York "])
+    assert location_matches(opp("Analyst", location="New York, NY"), config)
+
+
 def test_keyword_search_uses_boundaries_for_short_words():
     focused = Profile(title_keywords=["art"])
     assert title_matches(opp("Art Director"), focused)

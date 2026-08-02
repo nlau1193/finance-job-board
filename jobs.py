@@ -104,6 +104,11 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
     from jobhunt.filter import Profile
     from jobhunt.model import utc_now
 
+    try:
+        prior_count = len(store.load(BOARD_FILE).get("opportunities", []))
+    except (OSError, ValueError, json.JSONDecodeError):
+        prior_count = 0
+
     def _emit(phase, done, total, message):
         if progress:
             progress(phase, done, total, message)
@@ -203,10 +208,18 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
         {"company": r.get("company"), "warning": r.get("warning")}
         for r in receipts if r.get("warning")
     ]
+    for r in receipts:
+        malformed = int(r.get("dropped_malformed", 0) or 0)
+        if malformed:
+            warnings.append({
+                "company": r.get("company"),
+                "warning": f"Skipped {malformed} malformed posting row(s); other rows were kept",
+            })
     by_ats = {}
     for r in receipts:
         by_ats[r.get("ats", "?")] = by_ats.get(r.get("ats", "?"), 0) + (r.get("count") or 0)
     dropped = sum(r.get("dropped_non_actionable", 0) for r in receipts)
+    dropped_malformed = sum(int(r.get("dropped_malformed", 0) or 0) for r in receipts)
     companies_with = len({o.company for o in merged})
 
     meta = {
@@ -215,6 +228,7 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
         "companies_with_postings": companies_with,
         "raw_matches": len(filtered),
         "dropped_non_actionable": dropped,
+        "dropped_malformed": dropped_malformed,
         "by_ats": by_ats,
         "forms_extractable": sum(1 for o in filtered if (o.application or {}).get("extractable")),
         # Postings on an ATS whose application form the API can expose at all
@@ -234,6 +248,22 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
             "board was kept unchanged; check the network and run `./jobs doctor` "
             "before retrying."
         )
+    raw_total = sum(int(r.get("raw", r.get("count", 0)) or 0) for r in receipts)
+    dropped_total = sum(int(r.get("dropped_non_actionable", 0) or 0) for r in receipts)
+    if not _refresh_is_publishable(
+        resolved,
+        len(companies),
+        actionable_count=len(raw),
+        raw_total=raw_total,
+        dropped_total=dropped_total,
+        prior_count=prior_count,
+        protect_empty=not profile.title_keywords,
+    ):
+        raise RuntimeError(
+            "No actionable postings came back from the successful feeds. Your "
+            "existing board was kept unchanged; check the network and run `./jobs doctor` "
+            "before retrying."
+        )
     _emit("saving", 0, 0, "Saving board…")
     payload = store.save(merged, now=now, meta=meta)
     _build_board(payload)
@@ -241,14 +271,32 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
     return payload
 
 
-def _refresh_is_publishable(resolved: int, total: int) -> bool:
+def _refresh_is_publishable(
+    resolved: int,
+    total: int,
+    *,
+    actionable_count: int | None = None,
+    raw_total: int | None = None,
+    dropped_total: int = 0,
+    prior_count: int = 0,
+    protect_empty: bool = False,
+) -> bool:
     """Fail closed when fewer than 70% of configured feeds resolve.
 
     A majority outage is not a truthful job market. The caller keeps the last
     known-good board instead of replacing it with a badly partial refresh.
     """
     minimum = max(1, (total * 7 + 9) // 10)
-    return total > 0 and resolved >= minimum
+    if not (total > 0 and resolved >= minimum):
+        return False
+    # For the broad any-role starter, a 200 response with an empty/malformed
+    # payload from every feed is not evidence that the market disappeared. Keep
+    # the last known-good board when it exists. A focused search is allowed to
+    # publish zero matches because its server-side title query can be validly
+    # empty.
+    if protect_empty and prior_count and actionable_count == 0:
+        return False
+    return True
 
 
 def cmd_refresh(args) -> int:
@@ -439,7 +487,8 @@ def cmd_doctor(args) -> int:
 
     if BOARD_FILE.exists():
         try:
-            data = json.loads(BOARD_FILE.read_text(encoding="utf-8"))
+            from jobhunt import store
+            data = store.load(BOARD_FILE)
             opps = data.get("opportunities", [])
             n = len(opps)
             gen = data.get("generated_at", "?")
@@ -459,6 +508,11 @@ def cmd_doctor(args) -> int:
                 warn(f"{len(warnings)} refresh warnings:")
                 for item in warnings[:15]:
                     say(f"       - {item.get('company')}: {item.get('warning') or ''}".rstrip())
+            recovery = (data.get("meta") or {}).get("recovery_warnings") or []
+            if recovery:
+                warn("Local board recovery:")
+                for item in recovery[:15]:
+                    say(f"       - {item}")
         except Exception as exc:  # noqa: BLE001
             err(f"Board data unreadable: {exc}"); rc = 1
     else:

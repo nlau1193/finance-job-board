@@ -31,6 +31,7 @@ def _wire_pipeline(monkeypatch, tmp_path: Path, *, receipts, raw):
         encoding="utf-8",
     )
     companies = [{"name": "Acme", "slug": "acme", "ats": "greenhouse"}]
+    monkeypatch.setattr(jobs, "BOARD_FILE", board_path)
     monkeypatch.setattr(jobs, "_load_companies", lambda: companies)
     monkeypatch.setattr(jobs, "_profile_path", lambda: profile_path)
     monkeypatch.setattr(jobs, "_load_profile_raw", lambda: {"fit": {}})
@@ -76,8 +77,30 @@ def test_refresh_pipeline_publishes_filtered_enriched_board(monkeypatch, tmp_pat
     assert store.load_opportunities(board_path)[0].id == posting.id
 
 
+def test_refresh_pipeline_surfaces_malformed_feed_rows_without_dropping_good_rows(monkeypatch, tmp_path):
+    posting = _posting("2", "Financial Analyst")
+    board_path = _wire_pipeline(
+        monkeypatch,
+        tmp_path,
+        raw=[posting],
+        receipts=[{
+            "company": "Acme", "ats": "greenhouse", "result": "ok", "count": 1,
+            "raw": 2, "dropped_malformed": 1,
+        }],
+    )
+
+    payload = jobs.refresh_board()
+
+    assert [item["id"] for item in payload["opportunities"]] == [posting.id]
+    assert payload["meta"]["dropped_malformed"] == 1
+    assert payload["meta"]["warnings"] == [{
+        "company": "Acme",
+        "warning": "Skipped 1 malformed posting row(s); other rows were kept",
+    }]
+
+
 def test_refresh_pipeline_keeps_last_good_board_on_feed_outage(monkeypatch, tmp_path):
-    prior = _posting("prior")
+    prior = _posting("999999")
     board_path = _wire_pipeline(
         monkeypatch,
         tmp_path,
@@ -94,3 +117,35 @@ def test_refresh_pipeline_keeps_last_good_board_on_feed_outage(monkeypatch, tmp_
         raise AssertionError("an all-feed outage must fail closed")
 
     assert store.load_opportunities(board_path)[0].id == prior.id
+
+
+def test_refresh_pipeline_keeps_last_good_board_on_successful_empty_feed(monkeypatch, tmp_path):
+    prior = _posting("888888")
+    board_path = _wire_pipeline(
+        monkeypatch,
+        tmp_path,
+        raw=[],
+        receipts=[{"company": "Acme", "ats": "greenhouse", "result": "ok", "count": 0, "raw": 0}],
+    )
+    store.save([prior], now="2026-07-30T00:00:00Z")
+
+    try:
+        jobs.refresh_board()
+    except RuntimeError as exc:
+        assert "No actionable postings" in str(exc)
+    else:
+        raise AssertionError("a successful empty feed must not erase the last good board")
+
+    assert store.load_opportunities(board_path)[0].id == prior.id
+
+
+def test_hydration_fetch_errors_are_visible_in_refresh_summary(monkeypatch):
+    from jobhunt.ats._http import FetchError
+
+    posting = _posting()
+    def fail(*args, **kwargs):
+        raise FetchError("HTTP 500")
+
+    monkeypatch.setattr(discover, "_hydrate_greenhouse", fail)
+    summary = discover.hydrate_details([posting])
+    assert summary["hydrate_errors"] == [{"id": posting.id, "error": "application form fetch failed"}]

@@ -60,6 +60,7 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
 
     by_id: dict[str, Opportunity] = {}
     raw_total = 0
+    malformed = 0
     warnings: list[str] = []
     truncated = False
     try:
@@ -70,13 +71,17 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
                         "offset": page * _PAGE, "searchText": term}
                 data = post_json(endpoint, body, session=http, ttl=ttl, use_cache=use_cache)
                 postings = data.get("jobPostings", []) if isinstance(data, dict) else []
+                if not isinstance(postings, list):
+                    postings = []
                 if isinstance(data, dict) and isinstance(data.get("total"), int):
                     total = data["total"]
                 raw_total += len(postings)
                 for post in postings:
                     opp = _to_opportunity(post, company, slug, host, site)
-                    if opp is not None:
-                        by_id[opp.job_id] = opp
+                    if opp is None:
+                        malformed += 1
+                        continue
+                    by_id[opp.job_id] = opp
                 if len(postings) < _PAGE or (total is not None and (page + 1) * _PAGE >= total):
                     break  # last page for this search
             else:
@@ -93,6 +98,8 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
                 receipt["warning"] = "; ".join(warnings)
             if truncated:
                 receipt["truncated"] = True
+            if malformed:
+                receipt["dropped_malformed"] = malformed
             return list(by_id.values()), receipt
         receipt.update(result="error", error=str(exc), count=0)
         return [], receipt
@@ -102,16 +109,31 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
         receipt["warning"] = "; ".join(warnings)
     if truncated:
         receipt["truncated"] = True
+    if malformed:
+        receipt["dropped_malformed"] = malformed
     return list(by_id.values()), receipt
 
 
 def _to_opportunity(post: dict, company: dict, slug: str, host: str, site: str):
     if not isinstance(post, dict):
         return None
-    path = (post.get("externalPath") or "").strip()
-    title = (post.get("title") or "").strip()
+    raw_path = post.get("externalPath") or ""
+    raw_title = post.get("title") or ""
+    if not isinstance(raw_path, str) or not isinstance(raw_title, str):
+        return None
+    path = raw_path.strip()
+    title = raw_title.strip()
     bullets = post.get("bulletFields") or []
-    job_id = (bullets[0] if bullets else "") or path
+    if not isinstance(bullets, list):
+        return None
+    if bullets:
+        raw_job_id = bullets[0]
+        if (isinstance(raw_job_id, bool)
+                or not isinstance(raw_job_id, (str, int))):
+            return None
+        job_id = str(raw_job_id).strip() or path
+    else:
+        job_id = path
     if not (path and title and job_id):
         return None
 
@@ -121,7 +143,10 @@ def _to_opportunity(post: dict, company: dict, slug: str, host: str, site: str):
     # location is encoded in the path (…/job/{Location-Slug}/{Title}_{id}). Fall
     # back to it so foreign/onsite roles are filtered instead of defaulting to
     # "keep". Without this, a foreign role can leak onto the board.
-    location = (post.get("locationsText") or "").strip() or _location_from_path(path)
+    raw_location = post.get("locationsText")
+    if raw_location is not None and not isinstance(raw_location, str):
+        return None
+    location = (raw_location or "").strip() or _location_from_path(path)
     return Opportunity(
         id=Opportunity.make_id("workday", slug, str(job_id)),
         company=company.get("name", slug),

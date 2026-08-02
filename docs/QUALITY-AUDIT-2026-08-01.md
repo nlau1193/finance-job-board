@@ -106,13 +106,13 @@ preserving the local-first, no-paid-tool default.
 
 ### Release boundary and remaining work
 
-The source checkout is now green, but the current GitHub history still contains
-an earlier, later-deleted `.env.example` and optional LinkedIn/API-key tooling.
-Deletion in a later commit is not enough for a public repository: the release
-must be republished from a fresh history so secrets and paid-provider names are
-not recoverable from ordinary history browsing. That history rewrite is the
-remaining publishing action; no credentials or private connection data are part
-of the new tree.
+The current branch is a clean two-commit public release and the checked-in tree
+contains no `.env.example`, API-key provider tooling, live board data, or private
+connections. Git hosting still retains unreachable historical objects that can
+be fetched by an old SHA; one such object exposes the earlier Leo author email
+and removed optional tooling. This is not a current-tree credential leak, but it
+means a strict Nicole-only history claim is not proven. Repository rename or
+delete/recreate is an owner-controlled privacy decision, not a source-code gate.
 
 The LinkedIn arm remains opt-in and read-only for installations that explicitly
 choose it. It is not required for the core board, refresh, or Apply links. Lower
@@ -145,3 +145,52 @@ the fixture-backed CI run.
 31. The local server is intentionally single-user and loopback-oriented, but
     its refresh API has no authenticated session or CSRF token. It should stay
     documented as a trusted-local tool, not be exposed on an untrusted LAN.
+
+### Focused resilience fixes — 2026-08-02
+
+32. **One malformed ATS row could poison an otherwise healthy feed.** The
+    Greenhouse, Ashby, Lever, and Workday adapters now validate nested shapes,
+    skip only the malformed posting, and retain a `dropped_malformed` receipt;
+    refresh metadata surfaces that warning while keeping good rows.
+33. **Corrupt local state could crash the board renderer.** Store recovery now
+    repairs malformed application prompts/gates, fit labels, and warm-path
+    people, drops unusable rows, and records a recovery warning instead of
+    handing unsafe shapes to the browser.
+34. **A poisoned cache timestamp could stay fresh forever.** Cache reads now
+    reject NaN, infinity, future, and absurdly large timestamps before using a
+    cached payload.
+
+The remaining any-job follow-ups are intentionally visible: Workday broad
+refreshes can be request-heavy, description search is still shallow, overlay
+state is single-profile/local, two-tab conflict messaging is not yet shown,
+and live ATS availability remains an opt-in verifier rather than default CI.
+
+## Final takeover receipt — 2026-08-02
+
+This receipt supersedes the earlier proof counts above. It is the bounded final
+pass for the public any-job board, not a claim that every optional enhancement
+is complete.
+
+- `./.venv/bin/python -m pytest -q`: **188 passed**.
+- `./jobs doctor`: green; 241 configured official ATS companies, no account,
+  API key, paid provider, or browser automation required.
+- `JOBBOARD_E2E_PORT=8903 JOBBOARD_E2E_ARTIFACT_DIR=/tmp/jobboard-final-e2e
+  npm run test:e2e`: green. Captured desktop, mobile detail, loading, and
+  refresh-without-server states in `/tmp/jobboard-final-e2e`.
+- Any-job matrix: ten independent technology profiles plus unrestricted
+  all-role and department-driven cases remain covered by the committed
+  profile-matrix tests.
+- Taste lint: **0 errors, 0 warnings, 0 suggestions** across `docs/` and
+  `README.md`.
+- The final fixes harden malformed ATS rows, malformed nested local state,
+  poisoned cache timestamps, punctuation-aware profile filtering, actionable
+  Apply links, broad-feed empty-result preservation, and profile-scoped browser
+  state. Good rows survive a bad row with a visible refresh warning.
+- `git diff --check`: clean. Impeccable warnings were reviewed and retained
+  only where the visual treatment is semantic or communicates progress.
+
+The public product is called **Job Hunt Board** and accepts any job category.
+The GitHub slug remains `finance-job-board` because this account has push but
+not admin permission; renaming or history surgery is a separate owner/admin
+decision. Historical unreachable objects also mean a strict Nicole-only history
+claim is not proven by this source pass.

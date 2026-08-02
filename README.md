@@ -5,9 +5,11 @@ kind of role from official company applicant-tracking systems (ATS). Search
 and filter in one calm board, open the exact application, and keep your triage
 on your own Mac.
 
-The public repository is named `job-board`. The product is intentionally not
-limited to one field: start with the public title list empty to see every kind
-of job, or add the titles and keywords you want.
+The product is called `job-board` and is intentionally not limited to one
+field: start with the public title list empty to see every kind of job, or add
+the titles and keywords you want. The current public GitHub URL is still
+`github.com/nlau1193/finance-job-board` while the repository owner completes
+the requested rename; use the **Code** menu on that page for the clone command.
 
 ## The easiest setup
 
@@ -24,7 +26,7 @@ It has no account, API key, paid service, or subscription.
 You need macOS and Python 3.10 or newer.
 
 On GitHub, choose **Code → Download ZIP**, unzip it, then open Terminal in the
-`job-board` folder. If you already use Git, copy the HTTPS clone command
+unpacked project folder. If you already use Git, copy the HTTPS clone command
 shown in that same **Code** menu. Then run:
 
 ```bash

@@ -107,6 +107,32 @@ try {
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator("a.apply").count(), 1, "live fixture must expose the exact Apply link");
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
+
+  // Existing installs used one global key before profile-scoped state shipped.
+  // A first load must migrate that triage once, without leaking it to another
+  // profile or overwriting a scoped object that already exists.
+  await page.evaluate(() => {
+    const row = document.querySelector("#list .row");
+    const id = row?.getAttribute("data-id");
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("job-hunt-board-state-v2:")) localStorage.removeItem(key);
+    }
+    localStorage.removeItem("job-hunt-board-state-v2:legacy-migrated");
+    localStorage.setItem("finance-job-board-state-v1", JSON.stringify({
+      [id]: { applied: "2026-08-01", read: true },
+    }));
+  });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.locator("#q").fill("Finance");
+  await page.locator("#list .row").first().click();
+  assert.equal(await page.locator('[data-act="applied"]').textContent(), "✓ Applied",
+    "legacy applied state should migrate into the profile-scoped key");
+  assert.equal(await page.locator('[data-act="read"]').textContent(), "Read ✓",
+    "legacy read state should migrate into the profile-scoped key");
+  const migrated = await page.evaluate(() => Object.keys(localStorage).some((key) => key.startsWith("job-hunt-board-state-v2:") && key !== "job-hunt-board-state-v2:legacy-migrated"));
+  assert.equal(migrated, true, "legacy triage must be copied to the new scoped key");
+  await page.locator('[data-act="applied"]').click();
+  assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
   await page.locator('[data-act="applied"]').click();
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "✓ Applied");
 

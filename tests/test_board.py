@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+import jobs
 from jobhunt import board
 from jobhunt.model import Opportunity, is_actionable_url
 
@@ -102,11 +103,23 @@ def test_large_board_uses_compact_browser_payload_but_keeps_local_data(tmp_path)
 
 
 def test_refresh_health_floor_rejects_total_outage():
-    import jobs
-
     assert not jobs._refresh_is_publishable(139, 200)
     assert jobs._refresh_is_publishable(140, 200)
     assert jobs._refresh_is_publishable(2, 2)
     assert not jobs._refresh_is_publishable(1, 2)
     assert not jobs._refresh_is_publishable(0, 200)
     assert not jobs._refresh_is_publishable(0, 0)
+
+
+def test_empty_feed_guard_only_protects_broad_board():
+    assert not jobs._refresh_is_publishable(
+        1, 1, actionable_count=0, raw_total=0, prior_count=1, protect_empty=True
+    )
+    # A focused search may legitimately have no matching source rows; publish
+    # that empty result instead of leaving unrelated roles on screen.
+    assert jobs._refresh_is_publishable(
+        1, 1, actionable_count=0, raw_total=0, prior_count=1, protect_empty=False
+    )
+    assert not jobs._refresh_is_publishable(
+        1, 1, actionable_count=0, raw_total=1, prior_count=1, protect_empty=True
+    )

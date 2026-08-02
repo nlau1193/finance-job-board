@@ -129,7 +129,12 @@ def _hydrate_greenhouse(opp: Opportunity, session, *, use_cache: bool, forms: bo
         if not opp.workplace_type and "remote" in (opp.location or "").lower():
             opp.workplace_type = "Remote"
     if forms:
-        opp.application = application.extract_greenhouse(data.get("questions"))
+        questions = data.get("questions")
+        opp.application = (
+            application.extract_greenhouse(questions)
+            if isinstance(questions, list)
+            else application.not_extractable()
+        )
 
 
 def _hydrate_ashby_form(opp: Opportunity, session, *, use_cache: bool) -> None:
@@ -148,7 +153,7 @@ def _hydrate_ashby_form(opp: Opportunity, session, *, use_cache: bool) -> None:
     posting = inner.get("jobPosting") if isinstance(inner, dict) else None
     form = posting.get("applicationForm") if isinstance(posting, dict) else None
     sections = form.get("sections") if isinstance(form, dict) else None
-    if sections:
+    if isinstance(sections, list):
         opp.application = application.extract_ashby(sections)
     else:
         opp.application = application.not_extractable()
@@ -184,6 +189,7 @@ def hydrate_details(opportunities: list[Opportunity], *, session=None,
             elif opp.ats == "ashby" and forms:
                 _hydrate_ashby_form(opp, session, use_cache=use_cache)
         except FetchError:
+            errors.append({"id": opp.id, "error": "application form fetch failed"})
             if forms and not opp.application:
                 opp.application = application.not_extractable()
         except Exception as exc:  # noqa: BLE001 — one malformed payload never kills the refresh

@@ -13,13 +13,20 @@ import tempfile
 import threading
 from pathlib import Path
 
-from .model import Opportunity, utc_now
+from .model import Opportunity, is_actionable_url, utc_now
 
 DEFAULT_PATH = Path(__file__).resolve().parents[1] / "data" / "jobs.local.json"
 # Durable, LOCAL-ONLY (gitignored) set of dismissed posting ids. A dismissed id
 # is excluded from EVERY future refresh, so a hidden role never comes back — even
 # if it drops off the ATS and reappears later with the same id.
 DISMISSED_PATH = Path(__file__).resolve().parents[1] / "data" / "dismissed.json"
+
+# Fields that make a stored row renderable and safe to hand to Opportunity.
+# Local JSON is intentionally treated as recoverable user state: a cancelled
+# copy, hand edit, or older version must not take down `jobs board`.
+_REQUIRED_OPPORTUNITY_FIELDS = (
+    "id", "company", "title", "location", "url", "ats", "company_slug", "job_id",
+)
 
 # The board's local server handles requests on threads (and a background refresh
 # can save while a dismiss lands), so the dismissed set's read-modify-write must
@@ -83,6 +90,134 @@ def load(path: Path = DEFAULT_PATH) -> dict:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(data, dict) or not isinstance(data.get("opportunities"), list):
         raise ValueError(f"{path} is not a valid board file")
+    recovery_messages = []
+    if not isinstance(data.get("meta"), dict):
+        data = dict(data)
+        data["meta"] = {}
+        recovery_messages.append("Reset invalid board metadata")
+    else:
+        data = dict(data)
+        meta = dict(data["meta"])
+        for field in ("errors", "warnings", "recovery_warnings"):
+            if field in meta and not isinstance(meta[field], list):
+                meta[field] = []
+                recovery_messages.append(f"Reset invalid board metadata field '{field}'")
+        data["meta"] = meta
+    # Only the generated boolean marker can authorize a demo row with no Apply
+    # URL. Treat stringy hand-edits such as "false" as false; truthiness here
+    # would turn a malformed local file into an empty-link bypass.
+    allow_empty_url = data["meta"].get("sample") is True
+    valid = []
+    invalid_count = 0
+    for item in data["opportunities"]:
+        # Older/local hand-edited board files can contain a valid-looking row
+        # with one malformed nested value.  Repair the list fields that the
+        # browser dereferences instead of throwing away the whole posting.
+        # Keep the recovery note visible so the owner can clean the source file
+        # without making a single bad connection/form entry take down the board.
+        if isinstance(item, dict):
+            application = item.get("application")
+            if isinstance(application, dict):
+                for field, predicate, label in (
+                    ("prompts", lambda value: isinstance(value, dict)
+                     and isinstance(value.get("label"), str)
+                     and bool(value.get("label", "").strip()), "application prompt"),
+                    ("gates", lambda value: isinstance(value, dict)
+                     and isinstance(value.get("label"), str)
+                     and bool(value.get("label", "").strip()), "application gate"),
+                ):
+                    values = application.get(field)
+                    if isinstance(values, list):
+                        cleaned = [value for value in values if predicate(value)]
+                        removed = len(values) - len(cleaned)
+                        if removed:
+                            application[field] = cleaned
+                            entry_word = "entry" if removed == 1 else "entries"
+                            recovery_messages.append(
+                                f"Removed {removed} malformed {label} {entry_word}"
+                            )
+
+            enrichment = item.get("enrichment")
+            fit = enrichment.get("fit") if isinstance(enrichment, dict) else None
+            if isinstance(fit, dict):
+                for field in ("why", "red_flags", "missing"):
+                    values = fit.get(field)
+                    if isinstance(values, list):
+                        cleaned = [value.strip() for value in values
+                                   if isinstance(value, str) and value.strip()]
+                        removed = len(values) - len(cleaned)
+                    else:
+                        cleaned = []
+                        removed = 1 if field in fit else 0
+                    if removed:
+                        fit[field] = cleaned
+                        entry_word = "entry" if removed == 1 else "entries"
+                        recovery_messages.append(
+                            f"Removed {removed} malformed fit {field} {entry_word}"
+                        )
+            warm = enrichment.get("warm") if isinstance(enrichment, dict) else None
+            if isinstance(warm, dict) and "people" in warm:
+                people = warm.get("people")
+                cleaned_people = (
+                    [person for person in people
+                     if isinstance(person, dict)
+                     and isinstance(person.get("name"), str)
+                     and bool(person.get("name", "").strip())]
+                    if isinstance(people, list) else []
+                )
+                removed = (len(people) - len(cleaned_people)
+                           if isinstance(people, list) else 1)
+                if removed or not isinstance(people, list):
+                    warm["people"] = cleaned_people
+                    # A non-empty count with no safe person would make the
+                    # board render an empty warm card as if it were a match.
+                    if not cleaned_people:
+                        warm["count"] = 0
+                    entry_word = "entry" if removed == 1 else "entries"
+                    recovery_messages.append(
+                        f"Removed {removed} malformed warm connection {entry_word}"
+                    )
+        application = item.get("application") if isinstance(item, dict) else None
+        enrichment = item.get("enrichment") if isinstance(item, dict) else None
+        enriched_application = enrichment.get("application") if isinstance(enrichment, dict) else None
+        valid_item = (
+            isinstance(item, dict)
+            and all(isinstance(item.get(field), str)
+                    for field in _REQUIRED_OPPORTUNITY_FIELDS)
+            and all(item[field].strip() for field in _REQUIRED_OPPORTUNITY_FIELDS
+                    if field not in ("url", "location"))
+            and ((allow_empty_url and item["url"].strip() == "")
+                 or is_actionable_url(item["url"]))
+            and ("tags" not in item or isinstance(item["tags"], list))
+            and ("application" not in item or (
+                isinstance(application, dict)
+                and all(isinstance(application.get(field), list)
+                        for field in ("prompts", "gates", "flags")
+                        if field in application)
+            ))
+            and ("enrichment" not in item or (
+                isinstance(enrichment, dict)
+                and ("fit" not in enrichment or isinstance(enrichment["fit"], dict))
+                and ("application" not in enrichment or (
+                    isinstance(enriched_application, dict)
+                    and all(isinstance(enriched_application.get(field), list)
+                            for field in ("flags", "prompts")
+                            if field in enriched_application)
+                ))
+            ))
+        )
+        if valid_item:
+            valid.append(item)
+        else:
+            invalid_count += 1
+    if invalid_count:
+        data["opportunities"] = valid
+        recovery_messages.append(f"Skipped {invalid_count} invalid stored posting row(s)")
+    if recovery_messages:
+        meta = dict(data.get("meta") or {})
+        recovery = list(meta.get("recovery_warnings") or [])
+        meta["recovery_warnings"] = recovery + recovery_messages
+        data["meta"] = meta
     return data
 
 

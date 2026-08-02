@@ -44,7 +44,7 @@ _POSTING_PATTERNS = (
     re.compile(rf"(?:^|\.)jobs\.ashbyhq\.com/[^/]+/{_UUID}(?:/|$)"),
     re.compile(rf"(?:^|\.)jobs\.lever\.co/[^/]+/{_UUID}(?:/|$)"),
     re.compile(r"(?:^|\.)(?:job-boards|boards)\.greenhouse\.io/[^/]+/jobs/\d+(?:/|$)"),
-    re.compile(r"(?:^|[.\-])myworkdayjobs\.com/.+/job/.+"),
+    re.compile(r"(?:^|\.)myworkdayjobs\.com/.+/job/.+"),
 )
 
 # Hosts where a bare path (no id) is always a board/search surface, never a posting.
@@ -69,7 +69,7 @@ def is_actionable_url(url: object) -> bool:
     query = parse_qs(parsed.query)
     for key in _JOB_ID_QUERY_PARAMS:
         values = query.get(key)
-        if values and any(v.strip() for v in values):
+        if values and any(re.fullmatch(r"\d+", v.strip()) for v in values):
             return True
 
     # 2) Known posting host/path shapes for the structured ATS platforms.

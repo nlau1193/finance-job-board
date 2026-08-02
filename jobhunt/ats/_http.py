@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import time
 from pathlib import Path
 
@@ -45,6 +46,11 @@ def _read_cache(path: Path, ttl: int) -> object | None:
     fetched_epoch = envelope.get("fetched_epoch")
     if (isinstance(fetched_epoch, bool)
             or not isinstance(fetched_epoch, (int, float))):
+        return None
+    try:
+        if not math.isfinite(fetched_epoch) or fetched_epoch > time.time():
+            return None
+    except (OverflowError, TypeError):
         return None
     if time.time() - fetched_epoch > ttl:
         return None

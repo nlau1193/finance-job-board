@@ -7,6 +7,7 @@ without hitting the network. Every emitted Opportunity must be actionable.
 
 import pytest
 
+from jobhunt import discover
 from jobhunt.ats import greenhouse, ashby, lever
 from jobhunt.model import is_actionable_url
 
@@ -77,6 +78,56 @@ def test_lever_parser(monkeypatch, load_fixture):
     assert remote.department == "Finance"
 
 
+@pytest.mark.parametrize(
+    ("fetcher", "company", "payload", "good"),
+    [
+        (
+            greenhouse,
+            {"name": "Acme", "slug": "acme"},
+            {"jobs": [
+                {"id": "bad", "absolute_url": "https://boards.greenhouse.io/acme/jobs/bad",
+                 "title": "Bad", "location": "not-an-object"},
+                {"id": "1", "absolute_url": "https://boards.greenhouse.io/acme/jobs/1",
+                 "title": "Good", "location": {"name": "New York, NY"}},
+            ]},
+            "Good",
+        ),
+        (
+            ashby,
+            {"name": "Acme", "slug": "acme"},
+            {"jobs": [
+                {"id": "bad", "jobUrl": "https://jobs.ashbyhq.com/acme/00000000-0000-0000-0000-000000000001",
+                 "title": "Bad", "location": {"name": "not-a-string"}},
+                {"id": "00000000-0000-0000-0000-000000000002",
+                 "jobUrl": "https://jobs.ashbyhq.com/acme/00000000-0000-0000-0000-000000000002",
+                 "title": "Good", "location": "New York, NY"},
+            ]},
+            "Good",
+        ),
+        (
+            lever,
+            {"name": "Acme", "slug": "acme"},
+            [
+                {"id": "bad", "hostedUrl": "https://jobs.lever.co/acme/a1b2c3d4-1111-2222-3333-444455556666",
+                 "text": "Bad", "categories": "not-an-object"},
+                {"id": "1", "hostedUrl": "https://jobs.lever.co/acme/a1b2c3d4-1111-2222-3333-444455556667",
+                 "text": "Good", "categories": {"location": "New York, NY"}},
+            ],
+            "Good",
+        ),
+    ],
+)
+def test_malformed_nested_row_is_dropped_without_poisoning_feed(
+    monkeypatch, fetcher, company, payload, good
+):
+    monkeypatch.setattr(fetcher, "get_json", lambda *a, **k: payload)
+    opps, receipt = fetcher.fetch(company)
+
+    assert [opp.title for opp in opps] == [good]
+    assert receipt["raw"] == 2
+    assert receipt["dropped_malformed"] == 1
+
+
 def test_fetch_error_returns_empty(monkeypatch):
     from jobhunt.ats._http import FetchError
 
@@ -88,6 +139,34 @@ def test_fetch_error_returns_empty(monkeypatch):
     assert opps == []
     assert receipt["result"] == "error"
     assert receipt["count"] == 0
+
+
+def test_greenhouse_missing_questions_is_not_claimed_extractable(monkeypatch):
+    payload = {"jobs": [{
+        "id": 1,
+        "title": "Analyst",
+        "absolute_url": "https://boards.greenhouse.io/acme/jobs/1",
+    }]}
+    monkeypatch.setattr(greenhouse, "get_json", lambda *a, **k: payload)
+    opps, _ = greenhouse.fetch({"name": "Acme", "slug": "acme"})
+    monkeypatch.setattr(discover, "get_json", lambda *a, **k: {"content": "<p>JD</p>"})
+    discover.hydrate_details(opps)
+    assert opps[0].application["extractable"] is False
+
+
+def test_ashby_malformed_sections_is_not_claimed_extractable(monkeypatch):
+    payload = {"jobs": [{
+        "id": "00000000-0000-0000-0000-000000000001",
+        "title": "Analyst",
+        "jobUrl": "https://jobs.ashbyhq.com/acme/00000000-0000-0000-0000-000000000001",
+    }]}
+    monkeypatch.setattr(ashby, "get_json", lambda *a, **k: payload)
+    opps, _ = ashby.fetch({"name": "Acme", "slug": "acme"})
+    monkeypatch.setattr(discover, "post_json", lambda *a, **k: {
+        "data": {"jobPosting": {"applicationForm": {"sections": {"oops": "bad"}}}},
+    })
+    discover.hydrate_details(opps)
+    assert opps[0].application["extractable"] is False
 
 
 def test_greenhouse_fetches_content_true_and_maps_departments(monkeypatch, load_fixture):

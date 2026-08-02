@@ -260,13 +260,30 @@
   var LS_KEY = "job-hunt-board-state-v2:" + PROFILE_KEY;
   // Keep the pre-rename key as a one-way migration for existing installs.
   var LEGACY_LS_KEY = "finance-job-board-state-v1";
+  var LEGACY_MIGRATED_KEY = "job-hunt-board-state-v2:legacy-migrated";
   var selectedId = null, detailTrigger = null;
   var visibleLimit = 100, PAGE_SIZE = 100;
 
   var overlay = {};
   try {
-    var storedOverlay = JSON.parse(localStorage.getItem(LS_KEY) || (meta.search_profile_key ? "{}" : localStorage.getItem(LEGACY_LS_KEY)) || "{}");
-    overlay = storedOverlay && typeof storedOverlay === "object" && !Array.isArray(storedOverlay) ? storedOverlay : {};
+    var scopedRaw = localStorage.getItem(LS_KEY);
+    var storedOverlay = scopedRaw ? JSON.parse(scopedRaw) : null;
+    if (!storedOverlay || typeof storedOverlay !== "object" || Array.isArray(storedOverlay)) {
+      storedOverlay = {};
+    }
+    // Older installs stored triage globally. Migrate it only when this profile
+    // has never written a scoped key, and mark the browser once so another
+    // profile cannot inherit Nicole's old state later. Never overwrite a
+    // present scoped object, including an intentionally empty one.
+    if (scopedRaw === null && !localStorage.getItem(LEGACY_MIGRATED_KEY)) {
+      var legacyOverlay = JSON.parse(localStorage.getItem(LEGACY_LS_KEY) || "{}");
+      if (legacyOverlay && typeof legacyOverlay === "object" && !Array.isArray(legacyOverlay)) {
+        storedOverlay = legacyOverlay;
+        localStorage.setItem(LS_KEY, JSON.stringify(storedOverlay));
+        localStorage.setItem(LEGACY_MIGRATED_KEY, "1");
+      }
+    }
+    overlay = storedOverlay;
   } catch (e) { overlay = {}; }
   function saveOverlay() { try { localStorage.setItem(LS_KEY, JSON.stringify(overlay)); } catch (e) {} }
   function todayKey() { var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }

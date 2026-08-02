@@ -120,6 +120,14 @@ def test_momentum_delta():
     assert m["Acme"]["matching_delta"] == 1
 
 
+def test_malformed_momentum_snapshot_is_ignored(tmp_path, monkeypatch):
+    path = tmp_path / ".momentum.json"
+    path.write_text("[]", encoding="utf-8")
+    monkeypatch.setattr(enrich, "MOMENTUM_SNAPSHOT", path)
+    result = enrich.enrich_all([opp("FM", company="Acme")], [opp("FM", company="Acme")], fit={})
+    assert result["connections_loaded"] is False
+
+
 def test_freshness_badges():
     now = datetime(2026, 6, 30, tzinfo=timezone.utc)
     assert enrich.freshness(opp("x", posted="2026-06-30"), now=now)["badge"] == "apply today"
