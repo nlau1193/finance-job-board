@@ -27,8 +27,10 @@ _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
 _TENURE_RE = re.compile(r"\b(\d{2})\+?\s*(?:years|yrs)\b", re.IGNORECASE)
 # "$120,000 - $160,000", "$120K – $160K", "$120K-$160K/yr"
+# Keep the amount grammar broad enough for seven-figure postings. The old
+# 2–3-digit lead accepted common ranges but silently dropped $1,000,000+ roles.
 _COMP_RANGE_RE = re.compile(
-    r"\$\s?(\d{2,3}(?:,\d{3})?(?:\.\d+)?\s?[kK]?)\s?(?:-|–|—|to)\s?\$?\s?(\d{2,3}(?:,\d{3})?(?:\.\d+)?\s?[kK]?)"
+    r"\$\s?(\d+(?:,\d{3})*(?:\.\d+)?\s?[kK]?)\s?(?:-|–|—|to)\s?\$?\s?(\d+(?:,\d{3})*(?:\.\d+)?\s?[kK]?)"
 )
 _COMPANY_SUFFIX_RE = re.compile(r"\b(inc|llc|l\.l\.c|corp|corporation|co|ltd|the|labs|technologies|inc\.)\b", re.IGNORECASE)
 
@@ -141,12 +143,15 @@ def load_connections(path: Path = CONNECTIONS_CSV) -> dict[str, list[dict]]:
         return {}
     by_company: dict[str, list[dict]] = {}
     try:
-        text = Path(path).read_text(encoding="utf-8", errors="replace")
+        text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
         # LinkedIn prepends a "Notes:" preamble; skip to the header row.
         lines = text.splitlines()
-        start = next((i for i, ln in enumerate(lines) if ln.lower().startswith("first name")), 0)
+        start = next((i for i, ln in enumerate(lines) if ln.lstrip().lower().startswith("first name")), 0)
         reader = csv.DictReader(lines[start:])
         for row in reader:
+            # Exports from spreadsheet tools sometimes indent the header. Keep
+            # field lookup stable without changing any person-provided values.
+            row = {str(key).lstrip("\ufeff").strip(): value for key, value in row.items()}
             company = (row.get("Company") or "").strip()
             if not company:
                 continue
@@ -194,6 +199,10 @@ def freshness(opp: Opportunity, now: datetime | None = None) -> dict:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     days = (now or datetime.now(timezone.utc)) - dt
+    if days.total_seconds() < 0:
+        # Clock-skewed/future ATS timestamps are not proof of urgency. Keep the
+        # role visible, but avoid an invented "apply today" signal.
+        return {"days": 0, "badge": "posted recently", "hot": False}
     d = max(0, days.days)
     if d <= 1:
         return {"days": d, "badge": "apply today", "hot": True}

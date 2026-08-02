@@ -67,6 +67,16 @@ def test_comp_k_format():
     assert enrich.parse_comp(o) == "$130K–$175K"
 
 
+def test_comp_large_comma_range():
+    o = opp("Principal Engineer", "Salary range: $1,000,000 - $1,200,000 USD")
+    assert enrich.parse_comp(o) == "$1000K–$1200K"
+
+
+def test_comp_large_uncomma_range():
+    o = opp("Principal Engineer", "Salary range: $1000000–$1200000 USD")
+    assert enrich.parse_comp(o) == "$1000K–$1200K"
+
+
 def test_comp_passthrough_when_already_set():
     o = opp("Finance Manager", "no numbers here", comp="$150K–$180K")
     assert enrich.parse_comp(o) == "$150K–$180K"
@@ -97,6 +107,18 @@ def test_warm_path_empty_without_match(tmp_path):
     csv.write_text("First Name,Last Name,Company,Position,Connected On\nA,B,Other Co,X,01 Jan 2024\n", encoding="utf-8")
     conns = enrich.load_connections(csv)
     assert enrich.warm_path(opp("FM", company="Ramp"), conns) == {}
+
+
+def test_connections_csv_bom_and_indented_header(tmp_path):
+    csv = tmp_path / "connections.csv"
+    csv.write_text(
+        "Notes: exported from LinkedIn\n"
+        " First Name, Last Name, Company, Position, Connected On\n"
+        "A,B,Acme,Engineer,01 Jan 2024\n",
+        encoding="utf-8-sig",
+    )
+    conns = enrich.load_connections(csv)
+    assert conns["acme"] == [{"name": "A B", "position": "Engineer"}]
 
 
 def test_no_csv_is_graceful(tmp_path):
@@ -155,3 +177,6 @@ def test_freshness_badges():
     assert enrich.freshness(opp("x", posted="2026-06-30"), now=now)["badge"] == "apply today"
     assert enrich.freshness(opp("x", posted="2026-06-26"), now=now)["badge"] == "this week"
     assert enrich.freshness(opp("x", posted="2026-06-01"), now=now)["hot"] is False
+    assert enrich.freshness(opp("x", posted="2026-07-02"), now=now) == {
+        "days": 0, "badge": "posted recently", "hot": False,
+    }
