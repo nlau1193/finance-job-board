@@ -331,6 +331,10 @@
     var effort = appS && appS.effort;
     return effort === "quick" || effort === "light" || effort === "heavy" ? effort : "";
   }
+  function linkedInUrlOf(value) {
+    var url = String(value || "");
+    return /^https:\/\/(?:www\.)?linkedin\.com(?:\/|$)/i.test(url) ? url : "";
+  }
 
   function renderStatus() {
     var companies = meta.companies_with_postings != null ? countOf(meta.companies_with_postings) : new Set(jobs.map(function (j){return j.company;})).size;
@@ -418,8 +422,9 @@
     // Warm path (the moat) first
     var li = e.linkedin || {};
     var liLinks = '';
-    if (li.connections) liLinks += '<a class="warm-cta" href="'+esc(li.connections)+'" target="_blank" rel="noopener noreferrer">🔎 Your connections at '+esc(j.company)+' →</a>';
-    if (li.recruiters) liLinks += '<a class="warm-cta" href="'+esc(li.recruiters)+'" target="_blank" rel="noopener noreferrer">🔎 Recruiters at '+esc(j.company)+' →</a>';
+    var liConnections = linkedInUrlOf(li.connections), liRecruiters = linkedInUrlOf(li.recruiters);
+    if (liConnections) liLinks += '<a class="warm-cta" href="'+esc(liConnections)+'" target="_blank" rel="noopener noreferrer">🔎 Your connections at '+esc(j.company)+' →</a>';
+    if (liRecruiters) liLinks += '<a class="warm-cta" href="'+esc(liRecruiters)+'" target="_blank" rel="noopener noreferrer">🔎 Recruiters at '+esc(j.company)+' →</a>';
     var warmCount = countOf(warm && warm.count);
     if (warm && warmCount) {
       var ppl = (warm.people||[]).map(function (p){ return '<div class="warmperson"><b>'+esc(p.name)+'</b>'+(p.position?' <span>· '+esc(p.position)+'</span>':'')+'</div>'; }).join("");

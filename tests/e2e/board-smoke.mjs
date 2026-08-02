@@ -120,6 +120,10 @@ try {
         total_roles: '<svg onload="window.__mom=2">',
         matching_roles: '<img src=x onerror="window.__mom=1">',
       },
+      linkedin: {
+        connections: 'javascript:window.__li=1',
+        recruiters: 'https://evil.example/redirect',
+      },
     },
   };
   writeFileSync(path.join(runRoot, "data", "jobs.local.json"), JSON.stringify({
@@ -144,8 +148,12 @@ try {
     "malformed local momentum counts must not execute as HTML");
   assert.equal(await page.evaluate(() => window.__app2 || null), null,
     "malformed local application counts must not execute as HTML");
+  assert.equal(await page.evaluate(() => window.__li || null), null,
+    "malformed local LinkedIn URLs must not execute as links");
   assert.equal(await page.locator("#detail img, #detail svg").count(), 0,
     "malformed local numeric state must not create DOM nodes");
+  assert.equal(await page.locator('#detail a.warm-cta').count(), 0,
+    "malformed local LinkedIn URLs must not create unsafe links");
 
   // Existing installs used one global key before profile-scoped state shipped.
   // A first load must migrate that triage once, without leaking it to another
