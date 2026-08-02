@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-29T00:00:00Z",
+  "meta": {
+    "sample": true,
+    "companies_with_postings": 2,
+    "note": "Fictional demonstration data. Run `./jobs refresh` for live postings."
+  },
+  "opportunities": [
+    {
+      "id": "greenhouse:northstar-cloud:10001",
+      "company": "Northstar Cloud",
+      "title": "Product Designer",
+      "location": "New York, NY",
+      "url": "",
+      "ats": "greenhouse",
+      "company_slug": "northstar-cloud",
+      "job_id": "10001",
+      "department": "Product",
+      "remote": false,
+      "posted_at": "2026-07-28T12:00:00Z",
+      "tags": ["sample", "software"],
+      "description_html": "<p>Fictional sample role. Turn complex product workflows into clear, welcoming experiences for customers.</p>",
+      "employment_type": "Full-time",
+      "workplace_type": "Hybrid",
+      "team": "Product Design",
+      "compensation": "$120,000–$145,000",
+      "application": {},
+      "enrichment": {},
+      "first_seen_at": "2026-07-29T00:00:00Z",
+      "last_seen_at": "2026-07-29T00:00:00Z",
+      "read": false,
+      "dismissed": false
+    },
+    {
+      "id": "ashby:paper-kite:20001",
+      "company": "Paper Kite",
+      "title": "Customer Support Specialist",
+      "location": "Remote — United States",
+      "url": "",
+      "ats": "ashby",
+      "company_slug": "paper-kite",
+      "job_id": "20001",
+      "department": "Customer Experience",
+      "remote": true,
+      "posted_at": "2026-07-26T12:00:00Z",
+      "tags": ["sample", "software"],
+      "description_html": "<p>Fictional sample role. Help customers solve real problems and turn their feedback into better product decisions.</p>",
+      "employment_type": "Full-time",
+      "workplace_type": "Remote",
+      "team": "Customer Experience",
+      "compensation": "$70,000–$90,000",
+      "application": {},
+      "enrichment": {},
+      "first_seen_at": "2026-07-29T00:00:00Z",
+      "last_seen_at": "2026-07-29T00:00:00Z",
+      "read": false,
+      "dismissed": false
+    }
+  ]
+}

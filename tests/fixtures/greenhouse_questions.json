@@ -1,0 +1,18 @@
+{
+  "id": 7954688,
+  "title": "FP&A Manager",
+  "content": "&lt;p&gt;Own the forecast.&lt;/p&gt;",
+  "questions": [
+    {"label": "First Name", "required": true, "fields": [{"type": "input_text", "name": "first_name"}]},
+    {"label": "Last Name", "required": true, "fields": [{"type": "input_text", "name": "last_name"}]},
+    {"label": "Email", "required": true, "fields": [{"type": "input_text", "name": "email"}]},
+    {"label": "Resume/CV", "required": true, "fields": [{"type": "input_file", "name": "resume"}]},
+    {"label": "Cover Letter", "required": false, "fields": [{"type": "input_file", "name": "cover_letter"}]},
+    {"label": "LinkedIn Profile", "required": false, "fields": [{"type": "input_text", "name": "linkedin"}]},
+    {"label": "How did you hear about this job?", "required": false, "fields": [{"type": "input_text", "name": "hear"}]},
+    {"label": "Why do you want to work here?", "required": true, "fields": [{"type": "textarea", "name": "why"}]},
+    {"label": "Describe a forecasting model you built end to end.", "required": true, "fields": [{"type": "textarea", "name": "model"}]},
+    {"label": "Will you now or in the future require company sponsorship to retain work authorization?", "required": true, "fields": [{"type": "multi_value_single_select", "name": "sponsor"}]},
+    {"label": "Gender", "required": false, "fields": [{"type": "multi_value_single_select", "name": "gender"}]}
+  ]
+}

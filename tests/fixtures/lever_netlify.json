@@ -1,0 +1,23 @@
+[
+  {
+    "id": "a1b2c3d4-1111-2222-3333-444455556666",
+    "text": "Senior Financial Analyst",
+    "hostedUrl": "https://jobs.lever.co/netlify/a1b2c3d4-1111-2222-3333-444455556666",
+    "categories": {"location": "New York, NY", "team": "Finance", "commitment": "Full-time"},
+    "workplaceType": "hybrid"
+  },
+  {
+    "id": "b2c3d4e5-2222-3333-4444-555566667777",
+    "text": "FP&A Manager",
+    "hostedUrl": "https://jobs.lever.co/netlify/b2c3d4e5-2222-3333-4444-555566667777",
+    "categories": {"location": "Remote - US", "team": "Finance", "commitment": "Full-time"},
+    "workplaceType": "remote"
+  },
+  {
+    "id": "c3d4e5f6-3333-4444-5555-666677778888",
+    "text": "Staff Software Engineer",
+    "hostedUrl": "https://jobs.lever.co/netlify/c3d4e5f6-3333-4444-5555-666677778888",
+    "categories": {"location": "San Francisco, CA", "team": "Engineering", "commitment": "Full-time"},
+    "workplaceType": "onsite"
+  }
+]

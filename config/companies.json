@@ -1,0 +1,2778 @@
+{
+  "version": 1,
+  "generated_at": "2026-06-30",
+  "note": "241 curated companies across Greenhouse, Ashby, Lever, and Workday. Verify entries with scripts/verify_universe.py; every board link must resolve to the company's official ATS posting.",
+  "companies": [
+    {
+      "name": "15Five",
+      "ats": "lever",
+      "slug": "15five",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.lever.co/15five",
+      "tags": [
+        "hr-tech"
+      ]
+    },
+    {
+      "name": "1Password",
+      "ats": "ashby",
+      "slug": "1password",
+      "hq": "Toronto, ON",
+      "careers_url": "https://jobs.ashbyhq.com/1password",
+      "tags": [
+        "security",
+        "saas"
+      ]
+    },
+    {
+      "name": "3M",
+      "ats": "workday",
+      "slug": "3m",
+      "workday_host": "3m.wd1.myworkdayjobs.com",
+      "workday_tenant": "3m",
+      "workday_site": "Search",
+      "hq": "St. Paul, MN",
+      "careers_url": "https://3m.wd1.myworkdayjobs.com/Search",
+      "tags": [
+        "industrial"
+      ]
+    },
+    {
+      "name": "Abnormal Security",
+      "ats": "greenhouse",
+      "slug": "abnormalsecurity",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/abnormalsecurity",
+      "tags": [
+        "security",
+        "saas"
+      ]
+    },
+    {
+      "name": "Addition Wealth",
+      "ats": "lever",
+      "slug": "additionwealth",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.lever.co/additionwealth",
+      "tags": [
+        "fintech",
+        "wealth"
+      ]
+    },
+    {
+      "name": "Adobe",
+      "ats": "workday",
+      "slug": "adobe",
+      "workday_host": "adobe.wd5.myworkdayjobs.com",
+      "workday_tenant": "adobe",
+      "workday_site": "external_experienced",
+      "hq": "San Jose, CA",
+      "careers_url": "https://adobe.wd5.myworkdayjobs.com/external_experienced",
+      "tags": [
+        "software",
+        "saas"
+      ]
+    },
+    {
+      "name": "Affirm",
+      "ats": "greenhouse",
+      "slug": "affirm",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/affirm",
+      "tags": [
+        "fintech",
+        "lending"
+      ]
+    },
+    {
+      "name": "Airbnb",
+      "ats": "greenhouse",
+      "slug": "airbnb",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/airbnb",
+      "tags": [
+        "marketplace",
+        "travel"
+      ]
+    },
+    {
+      "name": "Airtable",
+      "ats": "greenhouse",
+      "slug": "airtable",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/airtable",
+      "tags": [
+        "productivity",
+        "saas"
+      ]
+    },
+    {
+      "name": "Aledade",
+      "ats": "lever",
+      "slug": "aledade",
+      "hq": "Bethesda, MD",
+      "careers_url": "https://jobs.lever.co/aledade",
+      "tags": [
+        "healthtech",
+        "value-based-care"
+      ]
+    },
+    {
+      "name": "Alloy",
+      "ats": "greenhouse",
+      "slug": "alloy",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/alloy",
+      "tags": [
+        "fintech",
+        "identity"
+      ]
+    },
+    {
+      "name": "Ambience Healthcare",
+      "ats": "ashby",
+      "slug": "ambiencehealthcare",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/ambiencehealthcare",
+      "tags": [
+        "healthtech",
+        "ai"
+      ]
+    },
+    {
+      "name": "Anthropic",
+      "ats": "greenhouse",
+      "slug": "anthropic",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/anthropic",
+      "tags": [
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "name": "Antora Energy",
+      "ats": "greenhouse",
+      "slug": "antora",
+      "hq": "San Jose, CA",
+      "careers_url": "https://boards.greenhouse.io/antora",
+      "tags": [
+        "climate",
+        "energy"
+      ]
+    },
+    {
+      "name": "AppLovin",
+      "ats": "greenhouse",
+      "slug": "applovin",
+      "hq": "Palo Alto, CA",
+      "careers_url": "https://boards.greenhouse.io/applovin",
+      "tags": [
+        "adtech",
+        "mobile"
+      ]
+    },
+    {
+      "name": "april",
+      "ats": "ashby",
+      "slug": "april",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/april",
+      "tags": [
+        "fintech",
+        "tax",
+        "ai"
+      ]
+    },
+    {
+      "name": "Arcadia",
+      "ats": "lever",
+      "slug": "arcadia",
+      "hq": "Boston, MA",
+      "careers_url": "https://jobs.lever.co/arcadia",
+      "tags": [
+        "healthtech",
+        "data"
+      ]
+    },
+    {
+      "name": "Attentive",
+      "ats": "greenhouse",
+      "slug": "attentive",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/attentive",
+      "tags": [
+        "martech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Aurora Solar",
+      "ats": "ashby",
+      "slug": "aurorasolar",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/aurorasolar",
+      "tags": [
+        "climate",
+        "saas"
+      ]
+    },
+    {
+      "name": "Autodesk",
+      "ats": "workday",
+      "slug": "autodesk",
+      "workday_host": "autodesk.wd1.myworkdayjobs.com",
+      "workday_tenant": "autodesk",
+      "workday_site": "Ext",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://autodesk.wd1.myworkdayjobs.com/Ext",
+      "tags": [
+        "software",
+        "saas"
+      ]
+    },
+    {
+      "name": "Baseten",
+      "ats": "ashby",
+      "slug": "baseten",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/baseten",
+      "tags": [
+        "ai",
+        "infra"
+      ]
+    },
+    {
+      "name": "Benchling",
+      "ats": "ashby",
+      "slug": "benchling",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/benchling",
+      "tags": [
+        "biotech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Betterment",
+      "ats": "greenhouse",
+      "slug": "betterment",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/betterment",
+      "tags": [
+        "fintech",
+        "wealth"
+      ]
+    },
+    {
+      "name": "Block",
+      "ats": "greenhouse",
+      "slug": "block",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://job-boards.greenhouse.io/block",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Blueland",
+      "ats": "lever",
+      "slug": "blueland",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.lever.co/blueland",
+      "tags": [
+        "consumer",
+        "dtc"
+      ]
+    },
+    {
+      "name": "Bombas",
+      "ats": "greenhouse",
+      "slug": "bombas",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/bombas",
+      "tags": [
+        "consumer",
+        "dtc"
+      ]
+    },
+    {
+      "name": "Braze",
+      "ats": "greenhouse",
+      "slug": "braze",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/braze",
+      "tags": [
+        "martech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Brex",
+      "ats": "greenhouse",
+      "slug": "brex",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/brex",
+      "tags": [
+        "fintech",
+        "spend"
+      ]
+    },
+    {
+      "name": "Bringg",
+      "ats": "greenhouse",
+      "slug": "bringg",
+      "hq": "Tel Aviv, IL",
+      "careers_url": "https://boards.greenhouse.io/bringg",
+      "tags": [
+        "logistics",
+        "delivery"
+      ]
+    },
+    {
+      "name": "Bristol Myers Squibb",
+      "ats": "workday",
+      "slug": "bristol-myers-squibb",
+      "workday_host": "bristolmyerssquibb.wd5.myworkdayjobs.com",
+      "workday_tenant": "bristolmyerssquibb",
+      "workday_site": "BMS",
+      "hq": "Princeton, NJ",
+      "careers_url": "https://bristolmyerssquibb.wd5.myworkdayjobs.com/BMS",
+      "tags": [
+        "pharma",
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Brooklinen",
+      "ats": "greenhouse",
+      "slug": "brooklinen",
+      "hq": "Brooklyn, NY",
+      "careers_url": "https://boards.greenhouse.io/brooklinen",
+      "tags": [
+        "consumer",
+        "home"
+      ]
+    },
+    {
+      "name": "BuzzFeed",
+      "ats": "greenhouse",
+      "slug": "buzzfeed",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/buzzfeed",
+      "tags": [
+        "media",
+        "publishing"
+      ]
+    },
+    {
+      "name": "Capital One",
+      "ats": "workday",
+      "slug": "capitalone",
+      "workday_host": "capitalone.wd12.myworkdayjobs.com",
+      "workday_tenant": "capitalone",
+      "workday_site": "Capital_One",
+      "hq": "McLean, VA",
+      "careers_url": "https://capitalone.wd12.myworkdayjobs.com/Capital_One",
+      "tags": [
+        "banking",
+        "finance"
+      ]
+    },
+    {
+      "name": "Capital Rx",
+      "ats": "greenhouse",
+      "slug": "capitalrx",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/capitalrx",
+      "tags": [
+        "healthtech",
+        "pharmacy"
+      ]
+    },
+    {
+      "name": "Carta",
+      "ats": "greenhouse",
+      "slug": "carta",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/carta",
+      "tags": [
+        "fintech",
+        "equity"
+      ]
+    },
+    {
+      "name": "Carvana",
+      "ats": "greenhouse",
+      "slug": "carvana",
+      "hq": "Tempe, AZ",
+      "careers_url": "https://boards.greenhouse.io/carvana",
+      "tags": [
+        "marketplace",
+        "auto"
+      ]
+    },
+    {
+      "name": "Cedar",
+      "ats": "ashby",
+      "slug": "cedar",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/cedar",
+      "tags": [
+        "healthtech",
+        "fintech"
+      ]
+    },
+    {
+      "name": "Check",
+      "ats": "ashby",
+      "slug": "check-technologies",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/check-technologies",
+      "tags": [
+        "fintech",
+        "payroll"
+      ]
+    },
+    {
+      "name": "Checkr",
+      "ats": "greenhouse",
+      "slug": "checkr",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/checkr",
+      "tags": [
+        "hr-tech",
+        "background-checks"
+      ]
+    },
+    {
+      "name": "Chewy",
+      "ats": "workday",
+      "slug": "chewy",
+      "workday_host": "chewy.wd5.myworkdayjobs.com",
+      "workday_tenant": "chewy",
+      "workday_site": "External",
+      "hq": "Plantation, FL",
+      "careers_url": "https://chewy.wd5.myworkdayjobs.com/External",
+      "tags": [
+        "ecommerce",
+        "retail"
+      ]
+    },
+    {
+      "name": "Chime",
+      "ats": "greenhouse",
+      "slug": "chime",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/chime",
+      "tags": [
+        "fintech",
+        "banking"
+      ]
+    },
+    {
+      "name": "Cigna",
+      "ats": "workday",
+      "slug": "cigna",
+      "workday_host": "cigna.wd5.myworkdayjobs.com",
+      "workday_tenant": "cigna",
+      "workday_site": "cignacareers",
+      "hq": "Bloomfield, CT",
+      "careers_url": "https://cigna.wd5.myworkdayjobs.com/cignacareers",
+      "tags": [
+        "healthcare",
+        "insurance"
+      ]
+    },
+    {
+      "name": "Cisco",
+      "ats": "workday",
+      "slug": "cisco",
+      "workday_host": "cisco.wd5.myworkdayjobs.com",
+      "workday_tenant": "cisco",
+      "workday_site": "Cisco_Careers",
+      "hq": "San Jose, CA",
+      "careers_url": "https://cisco.wd5.myworkdayjobs.com/Cisco_Careers",
+      "tags": [
+        "networking"
+      ]
+    },
+    {
+      "name": "ClassPass",
+      "ats": "greenhouse",
+      "slug": "classpass",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/classpass",
+      "tags": [
+        "marketplace",
+        "fitness"
+      ]
+    },
+    {
+      "name": "CLEAR",
+      "ats": "greenhouse",
+      "slug": "clear",
+      "hq": "New York, NY",
+      "careers_url": "https://job-boards.greenhouse.io/clear",
+      "tags": [
+        "identity",
+        "travel"
+      ]
+    },
+    {
+      "name": "Clover Health",
+      "ats": "greenhouse",
+      "slug": "cloverhealth",
+      "hq": "Nashville, TN",
+      "careers_url": "https://boards.greenhouse.io/cloverhealth",
+      "tags": [
+        "healthtech",
+        "insurance"
+      ]
+    },
+    {
+      "name": "Cockroach Labs",
+      "ats": "greenhouse",
+      "slug": "cockroachlabs",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/cockroachlabs",
+      "tags": [
+        "data-infra",
+        "saas"
+      ]
+    },
+    {
+      "name": "Cohere",
+      "ats": "ashby",
+      "slug": "cohere",
+      "hq": "Toronto / SF",
+      "careers_url": "https://jobs.ashbyhq.com/cohere",
+      "tags": [
+        "ai",
+        "ml"
+      ]
+    },
+    {
+      "name": "Cohere Health",
+      "ats": "greenhouse",
+      "slug": "coherehealth",
+      "hq": "Boston, MA",
+      "careers_url": "https://boards.greenhouse.io/coherehealth",
+      "tags": [
+        "healthtech"
+      ]
+    },
+    {
+      "name": "Coinbase",
+      "ats": "greenhouse",
+      "slug": "coinbase",
+      "hq": "Remote (US)",
+      "careers_url": "https://job-boards.greenhouse.io/coinbase",
+      "tags": [
+        "crypto",
+        "fintech"
+      ]
+    },
+    {
+      "name": "Collective Health",
+      "ats": "greenhouse",
+      "slug": "collectivehealth",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/collectivehealth",
+      "tags": [
+        "healthtech",
+        "insurance"
+      ]
+    },
+    {
+      "name": "Cribl",
+      "ats": "greenhouse",
+      "slug": "cribl",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/cribl",
+      "tags": [
+        "observability",
+        "saas"
+      ]
+    },
+    {
+      "name": "Crusoe",
+      "ats": "ashby",
+      "slug": "crusoe",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/crusoe",
+      "tags": [
+        "climate",
+        "ai-compute"
+      ]
+    },
+    {
+      "name": "Current",
+      "ats": "greenhouse",
+      "slug": "current",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/current",
+      "tags": [
+        "fintech",
+        "banking"
+      ]
+    },
+    {
+      "name": "Cursor",
+      "ats": "ashby",
+      "slug": "cursor",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/cursor",
+      "tags": [
+        "ai",
+        "dev-tools"
+      ]
+    },
+    {
+      "name": "CVS Health",
+      "ats": "workday",
+      "slug": "cvs-health",
+      "workday_host": "cvshealth.wd1.myworkdayjobs.com",
+      "workday_tenant": "cvshealth",
+      "workday_site": "CVS_Health_Careers",
+      "hq": "Woonsocket, RI",
+      "careers_url": "https://cvshealth.wd1.myworkdayjobs.com/CVS_Health_Careers",
+      "tags": [
+        "healthcare",
+        "retail"
+      ]
+    },
+    {
+      "name": "Databricks",
+      "ats": "greenhouse",
+      "slug": "databricks",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/databricks",
+      "tags": [
+        "data-infra",
+        "saas"
+      ]
+    },
+    {
+      "name": "Datadog",
+      "ats": "greenhouse",
+      "slug": "datadog",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/datadog",
+      "tags": [
+        "observability",
+        "saas"
+      ]
+    },
+    {
+      "name": "David Energy",
+      "ats": "ashby",
+      "slug": "davidenergy",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/davidenergy",
+      "tags": [
+        "climate",
+        "energy"
+      ]
+    },
+    {
+      "name": "dbt Labs",
+      "ats": "greenhouse",
+      "slug": "dbtlabsinc",
+      "hq": "Philadelphia, PA",
+      "careers_url": "https://boards.greenhouse.io/dbtlabsinc",
+      "tags": [
+        "data",
+        "dev-tools"
+      ]
+    },
+    {
+      "name": "Deepgram",
+      "ats": "ashby",
+      "slug": "Deepgram",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/Deepgram",
+      "tags": [
+        "ai",
+        "voice"
+      ]
+    },
+    {
+      "name": "DISCO",
+      "ats": "greenhouse",
+      "slug": "disco",
+      "hq": "Austin, TX",
+      "careers_url": "https://boards.greenhouse.io/disco",
+      "tags": [
+        "legal-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Discord",
+      "ats": "greenhouse",
+      "slug": "discord",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/discord",
+      "tags": [
+        "consumer",
+        "social"
+      ]
+    },
+    {
+      "name": "Doctronic",
+      "ats": "ashby",
+      "slug": "doctronic",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/doctronic",
+      "tags": [
+        "healthtech",
+        "ai"
+      ]
+    },
+    {
+      "name": "DoorDash",
+      "ats": "greenhouse",
+      "slug": "doordashusa",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://job-boards.greenhouse.io/doordashusa",
+      "tags": [
+        "marketplace",
+        "logistics"
+      ]
+    },
+    {
+      "name": "DoubleVerify",
+      "ats": "greenhouse",
+      "slug": "doubleverify",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/doubleverify",
+      "tags": [
+        "adtech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Drata",
+      "ats": "ashby",
+      "slug": "drata",
+      "hq": "San Diego, CA",
+      "careers_url": "https://jobs.ashbyhq.com/drata",
+      "tags": [
+        "security",
+        "saas"
+      ]
+    },
+    {
+      "name": "Dropbox",
+      "ats": "greenhouse",
+      "slug": "dropbox",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://job-boards.greenhouse.io/dropbox",
+      "tags": [
+        "cloud-storage",
+        "saas"
+      ]
+    },
+    {
+      "name": "eBay",
+      "ats": "workday",
+      "slug": "ebay",
+      "workday_host": "ebay.wd5.myworkdayjobs.com",
+      "workday_tenant": "ebay",
+      "workday_site": "apply",
+      "hq": "San Jose, CA",
+      "careers_url": "https://ebay.wd5.myworkdayjobs.com/apply",
+      "tags": [
+        "ecommerce"
+      ]
+    },
+    {
+      "name": "Eight Sleep",
+      "ats": "ashby",
+      "slug": "eightsleep",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/eightsleep",
+      "tags": [
+        "consumer",
+        "hardware"
+      ]
+    },
+    {
+      "name": "Elevance Health",
+      "ats": "workday",
+      "slug": "elevance-health",
+      "workday_host": "elevancehealth.wd1.myworkdayjobs.com",
+      "workday_tenant": "elevancehealth",
+      "workday_site": "ANT",
+      "hq": "Indianapolis, IN",
+      "careers_url": "https://elevancehealth.wd1.myworkdayjobs.com/ANT",
+      "tags": [
+        "healthcare",
+        "insurance"
+      ]
+    },
+    {
+      "name": "ElevenLabs",
+      "ats": "ashby",
+      "slug": "elevenlabs",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/elevenlabs",
+      "tags": [
+        "ai",
+        "voice"
+      ]
+    },
+    {
+      "name": "EliseAI",
+      "ats": "ashby",
+      "slug": "eliseai",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/eliseai",
+      "tags": [
+        "proptech",
+        "ai"
+      ]
+    },
+    {
+      "name": "Etsy",
+      "ats": "workday",
+      "slug": "etsy",
+      "workday_host": "etsy.wd5.myworkdayjobs.com",
+      "workday_tenant": "etsy",
+      "workday_site": "Etsy_Careers",
+      "hq": "Brooklyn, NY",
+      "careers_url": "https://etsy.wd5.myworkdayjobs.com/Etsy_Careers",
+      "tags": [
+        "ecommerce",
+        "retail"
+      ]
+    },
+    {
+      "name": "Everlaw",
+      "ats": "greenhouse",
+      "slug": "everlaw",
+      "hq": "Oakland, CA",
+      "careers_url": "https://boards.greenhouse.io/everlaw",
+      "tags": [
+        "legal-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Faire",
+      "ats": "greenhouse",
+      "slug": "faire",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/faire",
+      "tags": [
+        "marketplace",
+        "wholesale"
+      ]
+    },
+    {
+      "name": "Fanatics",
+      "ats": "greenhouse",
+      "slug": "fanaticsinc",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/fanaticsinc",
+      "tags": [
+        "commerce",
+        "sports"
+      ]
+    },
+    {
+      "name": "Fanatics Collectibles",
+      "ats": "greenhouse",
+      "slug": "fanaticscollectibles",
+      "hq": "New York, NY",
+      "careers_url": "https://job-boards.greenhouse.io/fanaticscollectibles",
+      "tags": [
+        "commerce",
+        "sports"
+      ]
+    },
+    {
+      "name": "FanDuel",
+      "ats": "greenhouse",
+      "slug": "fanduel",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/fanduel",
+      "tags": [
+        "gaming",
+        "betting"
+      ]
+    },
+    {
+      "name": "Fay",
+      "ats": "greenhouse",
+      "slug": "fay",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/fay",
+      "tags": [
+        "healthtech",
+        "nutrition"
+      ]
+    },
+    {
+      "name": "Fidelity Investments",
+      "ats": "workday",
+      "slug": "fidelity",
+      "workday_host": "fmr.wd1.myworkdayjobs.com",
+      "workday_tenant": "fmr",
+      "workday_site": "FidelityCareers",
+      "hq": "Boston, MA",
+      "careers_url": "https://fmr.wd1.myworkdayjobs.com/FidelityCareers",
+      "tags": [
+        "asset-mgmt",
+        "finance"
+      ]
+    },
+    {
+      "name": "Figma",
+      "ats": "greenhouse",
+      "slug": "figma",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/figma",
+      "tags": [
+        "design",
+        "saas"
+      ]
+    },
+    {
+      "name": "Findigs",
+      "ats": "lever",
+      "slug": "findigs",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.lever.co/findigs",
+      "tags": [
+        "proptech",
+        "fintech"
+      ]
+    },
+    {
+      "name": "Fiserv",
+      "ats": "workday",
+      "slug": "fiserv",
+      "workday_host": "fiserv.wd5.myworkdayjobs.com",
+      "workday_tenant": "fiserv",
+      "workday_site": "EXT",
+      "hq": "Milwaukee, WI",
+      "careers_url": "https://fiserv.wd5.myworkdayjobs.com/EXT",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Fivetran",
+      "ats": "greenhouse",
+      "slug": "fivetran",
+      "hq": "Oakland, CA",
+      "careers_url": "https://boards.greenhouse.io/fivetran",
+      "tags": [
+        "data",
+        "saas"
+      ]
+    },
+    {
+      "name": "Flatiron Health",
+      "ats": "greenhouse",
+      "slug": "flatironhealth",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/flatironhealth",
+      "tags": [
+        "healthtech",
+        "oncology"
+      ]
+    },
+    {
+      "name": "Flexport",
+      "ats": "greenhouse",
+      "slug": "flexport",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/flexport",
+      "tags": [
+        "logistics",
+        "saas"
+      ]
+    },
+    {
+      "name": "Fluidstack",
+      "ats": "ashby",
+      "slug": "fluidstack",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/fluidstack",
+      "tags": [
+        "ai-compute",
+        "infra"
+      ]
+    },
+    {
+      "name": "Formation Bio",
+      "ats": "greenhouse",
+      "slug": "formationbio",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/formationbio",
+      "tags": [
+        "biotech",
+        "ai"
+      ]
+    },
+    {
+      "name": "FourKites",
+      "ats": "greenhouse",
+      "slug": "fourkites",
+      "hq": "Chicago, IL",
+      "careers_url": "https://boards.greenhouse.io/fourkites",
+      "tags": [
+        "logistics",
+        "supply-chain"
+      ]
+    },
+    {
+      "name": "Fundrise",
+      "ats": "lever",
+      "slug": "fundrise",
+      "hq": "Washington, DC",
+      "careers_url": "https://jobs.lever.co/fundrise",
+      "tags": [
+        "fintech",
+        "real-estate"
+      ]
+    },
+    {
+      "name": "Garner Health",
+      "ats": "greenhouse",
+      "slug": "garnerhealth",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/garnerhealth",
+      "tags": [
+        "healthtech"
+      ]
+    },
+    {
+      "name": "GE Aerospace",
+      "ats": "workday",
+      "slug": "ge-aerospace",
+      "workday_host": "geaerospace.wd5.myworkdayjobs.com",
+      "workday_tenant": "geaerospace",
+      "workday_site": "GE_ExternalSite",
+      "hq": "Cincinnati, OH",
+      "careers_url": "https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite",
+      "tags": [
+        "aerospace",
+        "industrial"
+      ]
+    },
+    {
+      "name": "GetYourGuide",
+      "ats": "greenhouse",
+      "slug": "getyourguide",
+      "hq": "Berlin, DE",
+      "careers_url": "https://boards.greenhouse.io/getyourguide",
+      "tags": [
+        "travel",
+        "marketplace"
+      ]
+    },
+    {
+      "name": "GitLab",
+      "ats": "greenhouse",
+      "slug": "gitlab",
+      "hq": "Remote (US)",
+      "careers_url": "https://boards.greenhouse.io/gitlab",
+      "tags": [
+        "dev-tools",
+        "saas"
+      ]
+    },
+    {
+      "name": "Glean",
+      "ats": "greenhouse",
+      "slug": "gleanwork",
+      "hq": "Palo Alto, CA",
+      "careers_url": "https://boards.greenhouse.io/gleanwork",
+      "tags": [
+        "ai",
+        "search"
+      ]
+    },
+    {
+      "name": "Global Payments",
+      "ats": "workday",
+      "slug": "globalpayments",
+      "workday_host": "tsys.wd1.myworkdayjobs.com",
+      "workday_tenant": "tsys",
+      "workday_site": "TSYS",
+      "hq": "Atlanta, GA",
+      "careers_url": "https://tsys.wd1.myworkdayjobs.com/TSYS",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Glossier",
+      "ats": "greenhouse",
+      "slug": "glossier",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/glossier",
+      "tags": [
+        "consumer",
+        "beauty"
+      ]
+    },
+    {
+      "name": "Gusto",
+      "ats": "greenhouse",
+      "slug": "gusto",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/gusto",
+      "tags": [
+        "hr-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Harry's",
+      "ats": "greenhouse",
+      "slug": "harrys",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/harrys",
+      "tags": [
+        "consumer",
+        "retail"
+      ]
+    },
+    {
+      "name": "Harvey",
+      "ats": "ashby",
+      "slug": "harvey",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/harvey",
+      "tags": [
+        "ai",
+        "legal"
+      ]
+    },
+    {
+      "name": "Headway",
+      "ats": "ashby",
+      "slug": "headway",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/headway",
+      "tags": [
+        "healthtech",
+        "mental-health"
+      ]
+    },
+    {
+      "name": "Hex",
+      "ats": "ashby",
+      "slug": "hex",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/hex",
+      "tags": [
+        "data",
+        "analytics"
+      ]
+    },
+    {
+      "name": "HighLevel",
+      "ats": "lever",
+      "slug": "gohighlevel",
+      "hq": "Dallas, TX",
+      "careers_url": "https://jobs.lever.co/gohighlevel",
+      "tags": [
+        "martech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Hightouch",
+      "ats": "greenhouse",
+      "slug": "hightouch",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/hightouch",
+      "tags": [
+        "data",
+        "saas"
+      ]
+    },
+    {
+      "name": "Hims & Hers",
+      "ats": "ashby",
+      "slug": "hims-and-hers",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/hims-and-hers",
+      "tags": [
+        "consumer",
+        "healthtech"
+      ]
+    },
+    {
+      "name": "Humana",
+      "ats": "workday",
+      "slug": "humana",
+      "workday_host": "humana.wd5.myworkdayjobs.com",
+      "workday_tenant": "humana",
+      "workday_site": "Humana_External_Career_Site",
+      "hq": "Louisville, KY",
+      "careers_url": "https://humana.wd5.myworkdayjobs.com/Humana_External_Career_Site",
+      "tags": [
+        "healthcare",
+        "insurance"
+      ]
+    },
+    {
+      "name": "iCapital",
+      "ats": "greenhouse",
+      "slug": "icapitalnetwork",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/icapitalnetwork",
+      "tags": [
+        "fintech",
+        "alts"
+      ]
+    },
+    {
+      "name": "Instacart",
+      "ats": "greenhouse",
+      "slug": "instacart",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/instacart",
+      "tags": [
+        "marketplace",
+        "grocery"
+      ]
+    },
+    {
+      "name": "Johnson & Johnson",
+      "ats": "workday",
+      "slug": "johnson-and-johnson",
+      "workday_host": "jj.wd5.myworkdayjobs.com",
+      "workday_tenant": "jj",
+      "workday_site": "JJ",
+      "hq": "New Brunswick, NJ",
+      "careers_url": "https://jj.wd5.myworkdayjobs.com/JJ",
+      "tags": [
+        "pharma",
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Justworks",
+      "ats": "greenhouse",
+      "slug": "justworks",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/justworks",
+      "tags": [
+        "hr-tech",
+        "fintech"
+      ]
+    },
+    {
+      "name": "Kalshi",
+      "ats": "ashby",
+      "slug": "kalshi",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/kalshi",
+      "tags": [
+        "fintech",
+        "trading"
+      ]
+    },
+    {
+      "name": "KeyBank",
+      "ats": "workday",
+      "slug": "keybank",
+      "workday_host": "keybank.wd5.myworkdayjobs.com",
+      "workday_tenant": "keybank",
+      "workday_site": "External_Career_Site",
+      "hq": "Cleveland, OH",
+      "careers_url": "https://keybank.wd5.myworkdayjobs.com/External_Career_Site",
+      "tags": [
+        "banking",
+        "finance"
+      ]
+    },
+    {
+      "name": "Klaviyo",
+      "ats": "greenhouse",
+      "slug": "klaviyo",
+      "hq": "Boston, MA",
+      "careers_url": "https://boards.greenhouse.io/klaviyo",
+      "tags": [
+        "martech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Komodo Health",
+      "ats": "greenhouse",
+      "slug": "komodohealth",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/komodohealth",
+      "tags": [
+        "healthtech",
+        "data"
+      ]
+    },
+    {
+      "name": "Lattice",
+      "ats": "greenhouse",
+      "slug": "lattice",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/lattice",
+      "tags": [
+        "hr-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Levi Strauss",
+      "ats": "workday",
+      "slug": "levi-strauss",
+      "workday_host": "levistraussandco.wd5.myworkdayjobs.com",
+      "workday_tenant": "levistraussandco",
+      "workday_site": "External",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://levistraussandco.wd5.myworkdayjobs.com/External",
+      "tags": [
+        "retail",
+        "apparel"
+      ]
+    },
+    {
+      "name": "Linear",
+      "ats": "ashby",
+      "slug": "linear",
+      "hq": "Remote",
+      "careers_url": "https://jobs.ashbyhq.com/linear",
+      "tags": [
+        "dev-tools",
+        "saas"
+      ]
+    },
+    {
+      "name": "Lithic",
+      "ats": "greenhouse",
+      "slug": "lithic",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/lithic",
+      "tags": [
+        "fintech",
+        "cards"
+      ]
+    },
+    {
+      "name": "Lyft",
+      "ats": "greenhouse",
+      "slug": "lyft",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/lyft",
+      "tags": [
+        "marketplace",
+        "mobility"
+      ]
+    },
+    {
+      "name": "Lyra Health",
+      "ats": "lever",
+      "slug": "lyrahealth",
+      "hq": "Burlingame, CA",
+      "careers_url": "https://jobs.lever.co/lyrahealth",
+      "tags": [
+        "healthtech",
+        "mental-health"
+      ]
+    },
+    {
+      "name": "Marqeta",
+      "ats": "greenhouse",
+      "slug": "marqeta",
+      "hq": "Oakland, CA",
+      "careers_url": "https://boards.greenhouse.io/marqeta",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Marsh McLennan",
+      "ats": "workday",
+      "slug": "marshmclennan",
+      "workday_host": "mmc.wd1.myworkdayjobs.com",
+      "workday_tenant": "mmc",
+      "workday_site": "careers",
+      "hq": "New York, NY",
+      "careers_url": "https://mmc.wd1.myworkdayjobs.com/careers",
+      "tags": [
+        "insurance",
+        "consulting"
+      ]
+    },
+    {
+      "name": "Mastercard",
+      "ats": "workday",
+      "slug": "mastercard",
+      "workday_host": "mastercard.wd1.myworkdayjobs.com",
+      "workday_tenant": "mastercard",
+      "workday_site": "CorporateCareers",
+      "hq": "Purchase, NY",
+      "careers_url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Maven Clinic",
+      "ats": "greenhouse",
+      "slug": "mavenclinic",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/mavenclinic",
+      "tags": [
+        "healthtech",
+        "womens-health"
+      ]
+    },
+    {
+      "name": "McKesson",
+      "ats": "workday",
+      "slug": "mckesson",
+      "workday_host": "mckesson.wd3.myworkdayjobs.com",
+      "workday_tenant": "mckesson",
+      "workday_site": "External_Careers",
+      "hq": "Irving, TX",
+      "careers_url": "https://mckesson.wd3.myworkdayjobs.com/External_Careers",
+      "tags": [
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Medtronic",
+      "ats": "workday",
+      "slug": "medtronic",
+      "workday_host": "medtronic.wd1.myworkdayjobs.com",
+      "workday_tenant": "medtronic",
+      "workday_site": "MedtronicCareers",
+      "hq": "Minneapolis, MN",
+      "careers_url": "https://medtronic.wd1.myworkdayjobs.com/MedtronicCareers",
+      "tags": [
+        "medtech",
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Menlo Security",
+      "ats": "ashby",
+      "slug": "menlosecurity",
+      "hq": "Mountain View, CA",
+      "careers_url": "https://jobs.ashbyhq.com/menlosecurity",
+      "tags": [
+        "security",
+        "saas"
+      ]
+    },
+    {
+      "name": "Merck",
+      "ats": "workday",
+      "slug": "merck",
+      "workday_host": "msd.wd5.myworkdayjobs.com",
+      "workday_tenant": "msd",
+      "workday_site": "SearchJobs",
+      "hq": "Rahway, NJ",
+      "careers_url": "https://msd.wd5.myworkdayjobs.com/SearchJobs",
+      "tags": [
+        "pharma",
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Mercury",
+      "ats": "greenhouse",
+      "slug": "mercury",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/mercury",
+      "tags": [
+        "fintech",
+        "banking"
+      ]
+    },
+    {
+      "name": "Middesk",
+      "ats": "ashby",
+      "slug": "middesk",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/middesk",
+      "tags": [
+        "fintech",
+        "identity"
+      ]
+    },
+    {
+      "name": "Misfits Market",
+      "ats": "greenhouse",
+      "slug": "misfitsmarket",
+      "hq": "Delanco, NJ",
+      "careers_url": "https://boards.greenhouse.io/misfitsmarket",
+      "tags": [
+        "commerce",
+        "grocery"
+      ]
+    },
+    {
+      "name": "Mixpanel",
+      "ats": "greenhouse",
+      "slug": "mixpanel",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/mixpanel",
+      "tags": [
+        "analytics",
+        "saas"
+      ]
+    },
+    {
+      "name": "MNTN",
+      "ats": "greenhouse",
+      "slug": "mntn",
+      "hq": "Austin, TX",
+      "careers_url": "https://boards.greenhouse.io/mntn",
+      "tags": [
+        "adtech",
+        "ctv"
+      ]
+    },
+    {
+      "name": "Model N",
+      "ats": "lever",
+      "slug": "modeln",
+      "hq": "San Mateo, CA",
+      "careers_url": "https://jobs.lever.co/modeln",
+      "tags": [
+        "saas",
+        "pricing"
+      ]
+    },
+    {
+      "name": "Modern Health",
+      "ats": "greenhouse",
+      "slug": "modernhealth",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/modernhealth",
+      "tags": [
+        "healthtech",
+        "mental-health"
+      ]
+    },
+    {
+      "name": "Modern Treasury",
+      "ats": "ashby",
+      "slug": "moderntreasury",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/moderntreasury",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "MongoDB",
+      "ats": "greenhouse",
+      "slug": "mongodb",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/mongodb",
+      "tags": [
+        "data-infra",
+        "saas"
+      ]
+    },
+    {
+      "name": "Monte Carlo",
+      "ats": "ashby",
+      "slug": "montecarlodata",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/montecarlodata",
+      "tags": [
+        "data",
+        "observability"
+      ]
+    },
+    {
+      "name": "Motive",
+      "ats": "greenhouse",
+      "slug": "motive",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/motive",
+      "tags": [
+        "logistics",
+        "saas"
+      ]
+    },
+    {
+      "name": "Movable Ink",
+      "ats": "greenhouse",
+      "slug": "movableink",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/movableink",
+      "tags": [
+        "martech",
+        "saas"
+      ]
+    },
+    {
+      "name": "MrBeast",
+      "ats": "greenhouse",
+      "slug": "mrbeastyoutube",
+      "hq": "Greenville, NC",
+      "careers_url": "https://job-boards.greenhouse.io/mrbeastyoutube",
+      "tags": [
+        "media",
+        "creator"
+      ]
+    },
+    {
+      "name": "Nasdaq",
+      "ats": "workday",
+      "slug": "nasdaq",
+      "workday_host": "nasdaq.wd1.myworkdayjobs.com",
+      "workday_tenant": "nasdaq",
+      "workday_site": "Global_External_Site",
+      "hq": "New York, NY",
+      "careers_url": "https://nasdaq.wd1.myworkdayjobs.com/Global_External_Site",
+      "tags": [
+        "fintech",
+        "finance"
+      ]
+    },
+    {
+      "name": "Navan",
+      "ats": "greenhouse",
+      "slug": "tripactions",
+      "hq": "Palo Alto, CA",
+      "careers_url": "https://boards.greenhouse.io/tripactions",
+      "tags": [
+        "travel",
+        "fintech"
+      ]
+    },
+    {
+      "name": "News Corp",
+      "ats": "workday",
+      "slug": "news-corp",
+      "workday_host": "dowjones.wd1.myworkdayjobs.com",
+      "workday_tenant": "dowjones",
+      "workday_site": "News_Corp_Careers",
+      "hq": "New York, NY",
+      "careers_url": "https://dowjones.wd1.myworkdayjobs.com/News_Corp_Careers",
+      "tags": [
+        "media",
+        "publishing"
+      ]
+    },
+    {
+      "name": "Nextdoor",
+      "ats": "greenhouse",
+      "slug": "nextdoor",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/nextdoor",
+      "tags": [
+        "media",
+        "social"
+      ]
+    },
+    {
+      "name": "Nike",
+      "ats": "workday",
+      "slug": "nike",
+      "workday_host": "nike.wd1.myworkdayjobs.com",
+      "workday_tenant": "nike",
+      "workday_site": "nke",
+      "hq": "Beaverton, OR",
+      "careers_url": "https://nike.wd1.myworkdayjobs.com/nke",
+      "tags": [
+        "retail",
+        "apparel"
+      ]
+    },
+    {
+      "name": "Northern Trust",
+      "ats": "workday",
+      "slug": "northerntrust",
+      "workday_host": "ntrs.wd1.myworkdayjobs.com",
+      "workday_tenant": "ntrs",
+      "workday_site": "northerntrust",
+      "hq": "Chicago, IL",
+      "careers_url": "https://ntrs.wd1.myworkdayjobs.com/northerntrust",
+      "tags": [
+        "banking",
+        "asset-mgmt"
+      ]
+    },
+    {
+      "name": "Northspyre",
+      "ats": "greenhouse",
+      "slug": "northspyre",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/northspyre",
+      "tags": [
+        "proptech",
+        "b2b"
+      ]
+    },
+    {
+      "name": "Notion",
+      "ats": "ashby",
+      "slug": "notion",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/notion",
+      "tags": [
+        "productivity",
+        "saas"
+      ]
+    },
+    {
+      "name": "Olo",
+      "ats": "lever",
+      "slug": "olo",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.lever.co/olo",
+      "tags": [
+        "restaurant-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Omada Health",
+      "ats": "greenhouse",
+      "slug": "omadahealth",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/omadahealth",
+      "tags": [
+        "healthtech"
+      ]
+    },
+    {
+      "name": "OpenAI",
+      "ats": "ashby",
+      "slug": "openai",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/openai",
+      "tags": [
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "name": "Ophelia",
+      "ats": "greenhouse",
+      "slug": "ophelia",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/ophelia",
+      "tags": [
+        "healthtech",
+        "telehealth"
+      ]
+    },
+    {
+      "name": "Oscar Health",
+      "ats": "greenhouse",
+      "slug": "oscar",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/oscar",
+      "tags": [
+        "healthtech",
+        "insurance"
+      ]
+    },
+    {
+      "name": "Oura",
+      "ats": "greenhouse",
+      "slug": "oura",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/oura",
+      "tags": [
+        "consumer",
+        "wearables"
+      ]
+    },
+    {
+      "name": "Oyster",
+      "ats": "ashby",
+      "slug": "oyster",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/oyster",
+      "tags": [
+        "hr-tech",
+        "global-payroll"
+      ]
+    },
+    {
+      "name": "Palantir",
+      "ats": "lever",
+      "slug": "palantir",
+      "hq": "Denver, CO",
+      "careers_url": "https://jobs.lever.co/palantir",
+      "tags": [
+        "data",
+        "enterprise"
+      ]
+    },
+    {
+      "name": "Patreon",
+      "ats": "ashby",
+      "slug": "patreon",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/patreon",
+      "tags": [
+        "creator",
+        "saas"
+      ]
+    },
+    {
+      "name": "PayPal",
+      "ats": "workday",
+      "slug": "paypal",
+      "workday_host": "paypal.wd1.myworkdayjobs.com",
+      "workday_tenant": "paypal",
+      "workday_site": "jobs",
+      "hq": "San Jose, CA",
+      "careers_url": "https://paypal.wd1.myworkdayjobs.com/jobs",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Peloton",
+      "ats": "greenhouse",
+      "slug": "peloton",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/peloton",
+      "tags": [
+        "consumer",
+        "fitness"
+      ]
+    },
+    {
+      "name": "PermitFlow",
+      "ats": "ashby",
+      "slug": "permitflow",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/permitflow",
+      "tags": [
+        "proptech",
+        "construction"
+      ]
+    },
+    {
+      "name": "Perplexity",
+      "ats": "ashby",
+      "slug": "perplexity",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/perplexity",
+      "tags": [
+        "ai",
+        "search"
+      ]
+    },
+    {
+      "name": "Persona",
+      "ats": "ashby",
+      "slug": "persona",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/persona",
+      "tags": [
+        "identity",
+        "saas"
+      ]
+    },
+    {
+      "name": "Pfizer",
+      "ats": "workday",
+      "slug": "pfizer",
+      "workday_host": "pfizer.wd1.myworkdayjobs.com",
+      "workday_tenant": "pfizer",
+      "workday_site": "PfizerCareers",
+      "hq": "New York, NY",
+      "careers_url": "https://pfizer.wd1.myworkdayjobs.com/PfizerCareers",
+      "tags": [
+        "pharma",
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Phia",
+      "ats": "ashby",
+      "slug": "phia",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/phia",
+      "tags": [
+        "consumer",
+        "ecommerce"
+      ]
+    },
+    {
+      "name": "Pinecone",
+      "ats": "ashby",
+      "slug": "pinecone",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/pinecone",
+      "tags": [
+        "ai",
+        "vector-db"
+      ]
+    },
+    {
+      "name": "Pinterest",
+      "ats": "greenhouse",
+      "slug": "pinterest",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/pinterest",
+      "tags": [
+        "media",
+        "social"
+      ]
+    },
+    {
+      "name": "Plaid",
+      "ats": "ashby",
+      "slug": "plaid",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/plaid",
+      "tags": [
+        "fintech",
+        "infra"
+      ]
+    },
+    {
+      "name": "PointClickCare",
+      "ats": "lever",
+      "slug": "pointclickcare",
+      "hq": "Toronto, ON",
+      "careers_url": "https://jobs.lever.co/pointclickcare",
+      "tags": [
+        "healthtech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Polymarket",
+      "ats": "ashby",
+      "slug": "polymarket",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/polymarket",
+      "tags": [
+        "fintech",
+        "crypto"
+      ]
+    },
+    {
+      "name": "project44",
+      "ats": "greenhouse",
+      "slug": "project44",
+      "hq": "Chicago, IL",
+      "careers_url": "https://boards.greenhouse.io/project44",
+      "tags": [
+        "logistics",
+        "supply-chain"
+      ]
+    },
+    {
+      "name": "Prudential Financial",
+      "ats": "workday",
+      "slug": "prudential",
+      "workday_host": "pru.wd5.myworkdayjobs.com",
+      "workday_tenant": "pru",
+      "workday_site": "Careers",
+      "hq": "Newark, NJ",
+      "careers_url": "https://pru.wd5.myworkdayjobs.com/Careers",
+      "tags": [
+        "insurance",
+        "finance"
+      ]
+    },
+    {
+      "name": "Public",
+      "ats": "greenhouse",
+      "slug": "public",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/public",
+      "tags": [
+        "fintech",
+        "investing"
+      ]
+    },
+    {
+      "name": "PVH",
+      "ats": "workday",
+      "slug": "pvh",
+      "workday_host": "pvh.wd1.myworkdayjobs.com",
+      "workday_tenant": "pvh",
+      "workday_site": "PVH_Careers",
+      "hq": "New York, NY",
+      "careers_url": "https://pvh.wd1.myworkdayjobs.com/PVH_Careers",
+      "tags": [
+        "retail",
+        "apparel"
+      ]
+    },
+    {
+      "name": "Ramp",
+      "ats": "ashby",
+      "slug": "ramp",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/ramp",
+      "tags": [
+        "fintech",
+        "spend"
+      ]
+    },
+    {
+      "name": "Reddit",
+      "ats": "greenhouse",
+      "slug": "reddit",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/reddit",
+      "tags": [
+        "media",
+        "social"
+      ]
+    },
+    {
+      "name": "Remote",
+      "ats": "greenhouse",
+      "slug": "remotecom",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/remotecom",
+      "tags": [
+        "hr-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Rent the Runway",
+      "ats": "greenhouse",
+      "slug": "renttherunway",
+      "hq": "Brooklyn, NY",
+      "careers_url": "https://boards.greenhouse.io/renttherunway",
+      "tags": [
+        "consumer",
+        "retail"
+      ]
+    },
+    {
+      "name": "Replit",
+      "ats": "ashby",
+      "slug": "replit",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/replit",
+      "tags": [
+        "dev-tools",
+        "ai"
+      ]
+    },
+    {
+      "name": "Resident",
+      "ats": "greenhouse",
+      "slug": "residenthome",
+      "hq": "New York, NY",
+      "careers_url": "https://job-boards.greenhouse.io/residenthome",
+      "tags": [
+        "consumer",
+        "dtc"
+      ]
+    },
+    {
+      "name": "Rho",
+      "ats": "ashby",
+      "slug": "rho",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/rho",
+      "tags": [
+        "fintech",
+        "spend"
+      ]
+    },
+    {
+      "name": "Ro",
+      "ats": "lever",
+      "slug": "ro",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.lever.co/ro",
+      "tags": [
+        "healthtech",
+        "consumer"
+      ]
+    },
+    {
+      "name": "Robinhood",
+      "ats": "greenhouse",
+      "slug": "robinhood",
+      "hq": "Menlo Park, CA",
+      "careers_url": "https://job-boards.greenhouse.io/robinhood",
+      "tags": [
+        "fintech"
+      ]
+    },
+    {
+      "name": "Roblox",
+      "ats": "greenhouse",
+      "slug": "roblox",
+      "hq": "San Mateo, CA",
+      "careers_url": "https://job-boards.greenhouse.io/roblox",
+      "tags": [
+        "gaming"
+      ]
+    },
+    {
+      "name": "Runway",
+      "ats": "ashby",
+      "slug": "runway",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/runway",
+      "tags": [
+        "ai",
+        "media"
+      ]
+    },
+    {
+      "name": "S&P Global",
+      "ats": "workday",
+      "slug": "spglobal",
+      "workday_host": "spgi.wd5.myworkdayjobs.com",
+      "workday_tenant": "spgi",
+      "workday_site": "SPGI_Careers",
+      "hq": "New York, NY",
+      "careers_url": "https://spgi.wd5.myworkdayjobs.com/SPGI_Careers",
+      "tags": [
+        "finance",
+        "data"
+      ]
+    },
+    {
+      "name": "Salesforce",
+      "ats": "workday",
+      "slug": "salesforce",
+      "workday_host": "salesforce.wd12.myworkdayjobs.com",
+      "workday_tenant": "salesforce",
+      "workday_site": "External_Career_Site",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site",
+      "tags": [
+        "crm",
+        "saas"
+      ]
+    },
+    {
+      "name": "Samsara",
+      "ats": "greenhouse",
+      "slug": "samsara",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/samsara",
+      "tags": [
+        "iot",
+        "saas"
+      ]
+    },
+    {
+      "name": "Sardine",
+      "ats": "ashby",
+      "slug": "sardine",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/sardine",
+      "tags": [
+        "fintech",
+        "fraud"
+      ]
+    },
+    {
+      "name": "Scale AI",
+      "ats": "greenhouse",
+      "slug": "scaleai",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/scaleai",
+      "tags": [
+        "ai",
+        "data"
+      ]
+    },
+    {
+      "name": "SeatGeek",
+      "ats": "greenhouse",
+      "slug": "seatgeek",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/seatgeek",
+      "tags": [
+        "marketplace",
+        "ticketing"
+      ]
+    },
+    {
+      "name": "Shiftsmart",
+      "ats": "ashby",
+      "slug": "shiftsmart",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/shiftsmart",
+      "tags": [
+        "marketplace",
+        "labor"
+      ]
+    },
+    {
+      "name": "Sierra",
+      "ats": "ashby",
+      "slug": "sierra",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/sierra",
+      "tags": [
+        "ai",
+        "saas"
+      ]
+    },
+    {
+      "name": "Sigma Computing",
+      "ats": "greenhouse",
+      "slug": "sigmacomputing",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/sigmacomputing",
+      "tags": [
+        "data",
+        "analytics"
+      ]
+    },
+    {
+      "name": "SmithRx",
+      "ats": "greenhouse",
+      "slug": "smithrx",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://job-boards.greenhouse.io/smithrx",
+      "tags": [
+        "healthtech",
+        "pharma"
+      ]
+    },
+    {
+      "name": "Snowflake",
+      "ats": "ashby",
+      "slug": "snowflake",
+      "hq": "Bozeman, MT",
+      "careers_url": "https://jobs.ashbyhq.com/snowflake",
+      "tags": [
+        "data",
+        "saas"
+      ]
+    },
+    {
+      "name": "Socure",
+      "ats": "ashby",
+      "slug": "socure",
+      "hq": "Remote (US)",
+      "careers_url": "https://jobs.ashbyhq.com/socure",
+      "tags": [
+        "fintech",
+        "identity"
+      ]
+    },
+    {
+      "name": "SoFi",
+      "ats": "greenhouse",
+      "slug": "sofi",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/sofi",
+      "tags": [
+        "fintech",
+        "lending"
+      ]
+    },
+    {
+      "name": "Spotify",
+      "ats": "lever",
+      "slug": "spotify",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.lever.co/spotify",
+      "tags": [
+        "media",
+        "music"
+      ]
+    },
+    {
+      "name": "Squarespace",
+      "ats": "greenhouse",
+      "slug": "squarespace",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/squarespace",
+      "tags": [
+        "saas",
+        "commerce"
+      ]
+    },
+    {
+      "name": "Stash",
+      "ats": "greenhouse",
+      "slug": "stashinvest",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/stashinvest",
+      "tags": [
+        "fintech",
+        "wealth"
+      ]
+    },
+    {
+      "name": "StockX",
+      "ats": "greenhouse",
+      "slug": "stockx",
+      "hq": "Detroit, MI",
+      "careers_url": "https://boards.greenhouse.io/stockx",
+      "tags": [
+        "marketplace",
+        "commerce"
+      ]
+    },
+    {
+      "name": "Stripe",
+      "ats": "greenhouse",
+      "slug": "stripe",
+      "hq": "New York, NY / SF",
+      "careers_url": "https://boards.greenhouse.io/stripe",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Stryker",
+      "ats": "workday",
+      "slug": "stryker",
+      "workday_host": "stryker.wd1.myworkdayjobs.com",
+      "workday_tenant": "stryker",
+      "workday_site": "StrykerCareers",
+      "hq": "Kalamazoo, MI",
+      "careers_url": "https://stryker.wd1.myworkdayjobs.com/StrykerCareers",
+      "tags": [
+        "medtech",
+        "healthcare"
+      ]
+    },
+    {
+      "name": "Substack",
+      "ats": "ashby",
+      "slug": "substack",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/substack",
+      "tags": [
+        "media",
+        "creator"
+      ]
+    },
+    {
+      "name": "Sweetgreen",
+      "ats": "greenhouse",
+      "slug": "sweetgreen",
+      "hq": "Los Angeles, CA",
+      "careers_url": "https://boards.greenhouse.io/sweetgreen",
+      "tags": [
+        "consumer",
+        "food"
+      ]
+    },
+    {
+      "name": "Synchrony",
+      "ats": "workday",
+      "slug": "synchrony",
+      "workday_host": "synchronyfinancial.wd5.myworkdayjobs.com",
+      "workday_tenant": "synchronyfinancial",
+      "workday_site": "careers",
+      "hq": "Stamford, CT",
+      "careers_url": "https://synchronyfinancial.wd5.myworkdayjobs.com/careers",
+      "tags": [
+        "banking",
+        "finance"
+      ]
+    },
+    {
+      "name": "Taboola",
+      "ats": "greenhouse",
+      "slug": "taboola",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/taboola",
+      "tags": [
+        "adtech",
+        "media"
+      ]
+    },
+    {
+      "name": "Tapestry",
+      "ats": "workday",
+      "slug": "tapestry",
+      "workday_host": "tapestry.wd108.myworkdayjobs.com",
+      "workday_tenant": "tapestry",
+      "workday_site": "Tapestry_Careers",
+      "hq": "New York, NY",
+      "careers_url": "https://tapestry.wd108.myworkdayjobs.com/Tapestry_Careers",
+      "tags": [
+        "retail",
+        "apparel"
+      ]
+    },
+    {
+      "name": "Target",
+      "ats": "workday",
+      "slug": "target",
+      "workday_host": "target.wd5.myworkdayjobs.com",
+      "workday_tenant": "target",
+      "workday_site": "targetcareers",
+      "hq": "Minneapolis, MN",
+      "careers_url": "https://target.wd5.myworkdayjobs.com/targetcareers",
+      "tags": [
+        "retail"
+      ]
+    },
+    {
+      "name": "Temporal",
+      "ats": "ashby",
+      "slug": "temporal",
+      "hq": "Seattle, WA",
+      "careers_url": "https://jobs.ashbyhq.com/temporal",
+      "tags": [
+        "dev-tools",
+        "infra"
+      ]
+    },
+    {
+      "name": "Thermo Fisher",
+      "ats": "workday",
+      "slug": "thermo-fisher",
+      "workday_host": "thermofisher.wd5.myworkdayjobs.com",
+      "workday_tenant": "thermofisher",
+      "workday_site": "ThermoFisherCareers",
+      "hq": "Waltham, MA",
+      "careers_url": "https://thermofisher.wd5.myworkdayjobs.com/ThermoFisherCareers",
+      "tags": [
+        "healthcare",
+        "life-sciences"
+      ]
+    },
+    {
+      "name": "Thomson Reuters",
+      "ats": "workday",
+      "slug": "thomson-reuters",
+      "workday_host": "thomsonreuters.wd5.myworkdayjobs.com",
+      "workday_tenant": "thomsonreuters",
+      "workday_site": "External_Career_Site",
+      "hq": "Toronto, ON",
+      "careers_url": "https://thomsonreuters.wd5.myworkdayjobs.com/External_Career_Site",
+      "tags": [
+        "media",
+        "information"
+      ]
+    },
+    {
+      "name": "Thrive Market",
+      "ats": "greenhouse",
+      "slug": "thrivemarket",
+      "hq": "Los Angeles, CA",
+      "careers_url": "https://boards.greenhouse.io/thrivemarket",
+      "tags": [
+        "commerce",
+        "grocery"
+      ]
+    },
+    {
+      "name": "Tilt",
+      "ats": "ashby",
+      "slug": "tilthq",
+      "hq": "Remote (US)",
+      "careers_url": "https://jobs.ashbyhq.com/tilthq",
+      "tags": [
+        "fintech",
+        "lending"
+      ]
+    },
+    {
+      "name": "Toast",
+      "ats": "greenhouse",
+      "slug": "toast",
+      "hq": "Boston, MA",
+      "careers_url": "https://boards.greenhouse.io/toast",
+      "tags": [
+        "restaurant-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Transcarent",
+      "ats": "lever",
+      "slug": "transcarent",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.lever.co/transcarent",
+      "tags": [
+        "healthtech"
+      ]
+    },
+    {
+      "name": "Tripadvisor",
+      "ats": "greenhouse",
+      "slug": "tripadvisor",
+      "hq": "Needham, MA",
+      "careers_url": "https://boards.greenhouse.io/tripadvisor",
+      "tags": [
+        "travel",
+        "media"
+      ]
+    },
+    {
+      "name": "Twilio",
+      "ats": "greenhouse",
+      "slug": "twilio",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://job-boards.greenhouse.io/twilio",
+      "tags": [
+        "saas",
+        "developer"
+      ]
+    },
+    {
+      "name": "Two Chairs",
+      "ats": "greenhouse",
+      "slug": "twochairs",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/twochairs",
+      "tags": [
+        "healthtech",
+        "mental-health"
+      ]
+    },
+    {
+      "name": "UiPath",
+      "ats": "ashby",
+      "slug": "uipath",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/uipath",
+      "tags": [
+        "automation",
+        "saas"
+      ]
+    },
+    {
+      "name": "Unit",
+      "ats": "ashby",
+      "slug": "unit",
+      "hq": "New York, NY",
+      "careers_url": "https://jobs.ashbyhq.com/unit",
+      "tags": [
+        "fintech",
+        "baas"
+      ]
+    },
+    {
+      "name": "Vanta",
+      "ats": "ashby",
+      "slug": "vanta",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/vanta",
+      "tags": [
+        "security",
+        "saas"
+      ]
+    },
+    {
+      "name": "Velocity Global",
+      "ats": "ashby",
+      "slug": "velocity",
+      "hq": "Denver, CO",
+      "careers_url": "https://jobs.ashbyhq.com/velocity",
+      "tags": [
+        "hr-tech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Vercel",
+      "ats": "greenhouse",
+      "slug": "vercel",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/vercel",
+      "tags": [
+        "dev-tools",
+        "saas"
+      ]
+    },
+    {
+      "name": "Vestwell",
+      "ats": "greenhouse",
+      "slug": "vestwell",
+      "hq": "New York, NY",
+      "careers_url": "https://job-boards.greenhouse.io/vestwell",
+      "tags": [
+        "fintech",
+        "retirement"
+      ]
+    },
+    {
+      "name": "Via",
+      "ats": "greenhouse",
+      "slug": "via",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/via",
+      "tags": [
+        "transit-tech",
+        "marketplace"
+      ]
+    },
+    {
+      "name": "Visa",
+      "ats": "workday",
+      "slug": "visa",
+      "workday_host": "visa.wd5.myworkdayjobs.com",
+      "workday_tenant": "visa",
+      "workday_site": "Visa",
+      "hq": "Foster City, CA",
+      "careers_url": "https://visa.wd5.myworkdayjobs.com/Visa",
+      "tags": [
+        "fintech",
+        "payments"
+      ]
+    },
+    {
+      "name": "Vox Media",
+      "ats": "greenhouse",
+      "slug": "voxmedia",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/voxmedia",
+      "tags": [
+        "media",
+        "publishing"
+      ]
+    },
+    {
+      "name": "VTS",
+      "ats": "greenhouse",
+      "slug": "vts",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/vts",
+      "tags": [
+        "proptech",
+        "saas"
+      ]
+    },
+    {
+      "name": "Warner Bros Discovery",
+      "ats": "workday",
+      "slug": "warner-bros-discovery",
+      "workday_host": "warnerbros.wd5.myworkdayjobs.com",
+      "workday_tenant": "warnerbros",
+      "workday_site": "global",
+      "hq": "New York, NY",
+      "careers_url": "https://warnerbros.wd5.myworkdayjobs.com/global",
+      "tags": [
+        "media",
+        "entertainment"
+      ]
+    },
+    {
+      "name": "Watershed",
+      "ats": "greenhouse",
+      "slug": "watershed",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://boards.greenhouse.io/watershed",
+      "tags": [
+        "climate",
+        "saas"
+      ]
+    },
+    {
+      "name": "Wealthfront",
+      "ats": "lever",
+      "slug": "wealthfront",
+      "hq": "Palo Alto, CA",
+      "careers_url": "https://jobs.lever.co/wealthfront",
+      "tags": [
+        "fintech",
+        "wealth"
+      ]
+    },
+    {
+      "name": "WorkOS",
+      "ats": "ashby",
+      "slug": "workos",
+      "hq": "San Francisco, CA",
+      "careers_url": "https://jobs.ashbyhq.com/workos",
+      "tags": [
+        "dev-tools",
+        "saas"
+      ]
+    },
+    {
+      "name": "Yext",
+      "ats": "greenhouse",
+      "slug": "yext",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/yext",
+      "tags": [
+        "saas",
+        "search"
+      ]
+    },
+    {
+      "name": "Yotpo",
+      "ats": "greenhouse",
+      "slug": "yotpo",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/yotpo",
+      "tags": [
+        "martech",
+        "commerce"
+      ]
+    },
+    {
+      "name": "Zapier",
+      "ats": "ashby",
+      "slug": "zapier",
+      "hq": "Remote (US)",
+      "careers_url": "https://jobs.ashbyhq.com/zapier",
+      "tags": [
+        "automation",
+        "saas"
+      ]
+    },
+    {
+      "name": "Zocdoc",
+      "ats": "greenhouse",
+      "slug": "zocdoc",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/zocdoc",
+      "tags": [
+        "healthtech",
+        "marketplace"
+      ]
+    },
+    {
+      "name": "Zola",
+      "ats": "greenhouse",
+      "slug": "zola",
+      "hq": "New York, NY",
+      "careers_url": "https://boards.greenhouse.io/zola",
+      "tags": [
+        "consumer",
+        "wedding"
+      ]
+    },
+    {
+      "name": "Zoom",
+      "ats": "workday",
+      "slug": "zoom",
+      "workday_host": "zoom.wd5.myworkdayjobs.com",
+      "workday_tenant": "zoom",
+      "workday_site": "Zoom",
+      "hq": "San Jose, CA",
+      "careers_url": "https://zoom.wd5.myworkdayjobs.com/Zoom",
+      "tags": [
+        "saas"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "jobs": [
+    {
+      "id": 7978019,
+      "internal_job_id": 3462532,
+      "title": "Integrated Campaigns Manager, Treasury",
+      "absolute_url": "https://stripe.com/jobs/search?gh_jid=7978019",
+      "departments": [
+        {
+          "id": 55211,
+          "name": "Marketing",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "location": {
+        "name": "Remote in the US"
+      },
+      "first_published": "2026-06-04T16:58:17-04:00",
+      "updated_at": "2026-06-26T17:05:45-04:00"
+    },
+    {
+      "id": 7678541,
+      "internal_job_id": 3377893,
+      "title": "Internal Audit Lead - Treasury, Finance & Operations",
+      "absolute_url": "https://stripe.com/jobs/search?gh_jid=7678541",
+      "location": {
+        "name": "Dublin OR London"
+      },
+      "first_published": "2026-03-25T05:27:34-04:00",
+      "updated_at": "2026-06-26T17:05:33-04:00"
+    },
+    {
+      "id": 7978915,
+      "internal_job_id": 3462944,
+      "title": "Mobile Engineer, Treasury",
+      "absolute_url": "https://stripe.com/jobs/search?gh_jid=7978915",
+      "location": {
+        "name": "United Kingdom"
+      },
+      "first_published": "2026-06-03T13:34:19-04:00",
+      "updated_at": "2026-06-26T17:05:45-04:00"
+    },
+    {
+      "id": 7543559,
+      "internal_job_id": 3339356,
+      "title": "Android Engineer, Terminal",
+      "absolute_url": "https://stripe.com/jobs/search?gh_jid=7543559",
+      "location": {
+        "name": "Toronto"
+      },
+      "first_published": "2026-01-20T17:31:58-05:00",
+      "updated_at": "2026-06-26T17:05:30-04:00"
+    },
+    {
+      "id": 8029988,
+      "internal_job_id": 3481034,
+      "title": "Deal Desk Analyst",
+      "absolute_url": "https://careers.datadoghq.com/detail/8029988/?gh_jid=8029988",
+      "location": {
+        "name": "Mexico City, Mexico"
+      },
+      "first_published": "2026-06-26T14:29:50-04:00",
+      "updated_at": "2026-06-26T14:29:50-04:00"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "_comment": "Starter search. Leave title_keywords empty to see every kind of job; add keywords when you want a focused search.",
+  "companies": [],
+  "referral_bio": "",
+  "title_keywords": [],
+  "title_exclude": [],
+  "locations": [
+    "new york",
+    "ny",
+    "nyc",
+    "remote"
+  ],
+  "remote_ok": true,
+  "max_age_days": 90,
+  "_fit_comment": "Optional local triage. Leave these lists empty when you do not want a fit label.",
+  "fit": {
+    "skills": [],
+    "too_junior": [],
+    "too_senior": [],
+    "gatekeepers": []
+  }
+}

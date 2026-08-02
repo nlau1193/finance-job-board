@@ -1,0 +1,31 @@
+# private per-install preferences
+config/search.local.json
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.coverage
+.playwright-cli/
+
+# runtime data (regenerated locally per machine)
+# data/jobs.local.json is the live board and may carry private CSV connection matches.
+data/jobs.local.json
+data/.cache/
+data/.momentum.json
+# A user's private LinkedIn export — never commit
+data/connections.csv
+# node (package.json is just a thin ./jobs wrapper; no real deps, but ignore if any)
+node_modules/
+
+# generated board
+artifacts/board/index.html
+
+# os
+.DS_Store
+
+# Durable local dismissals (personal triage state — never shared)
+data/dismissed.json

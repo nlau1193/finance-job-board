@@ -1,0 +1,23 @@
+{
+  "name": "job-hunt-board",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A local-first job board built from official company ATS feeds.",
+  "scripts": {
+    "dev": "./jobs start",
+    "start": "./jobs start",
+    "setup": "./jobs setup",
+    "configure": "./jobs configure --interactive",
+    "refresh": "./jobs refresh",
+    "board": "./jobs board",
+    "open": "./jobs open",
+    "serve": "./jobs serve",
+    "doctor": "./jobs doctor",
+    "config": "./jobs config",
+    "test": "./.venv/bin/python -m pytest --cov=jobhunt --cov=jobs --cov-report=term-missing --cov-fail-under=60 -q",
+    "test:e2e": "node tests/e2e/board-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

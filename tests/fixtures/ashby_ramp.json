@@ -1,0 +1,37 @@
+{
+  "jobs": [
+    {
+      "id": "1515fe6d-1d8e-475b-a5ee-cefe43e78cb7",
+      "title": "Account Executive",
+      "department": "Sales",
+      "location": "London",
+      "isRemote": false,
+      "isListed": true,
+      "jobUrl": "https://jobs.ashbyhq.com/ramp/1515fe6d-1d8e-475b-a5ee-cefe43e78cb7",
+      "applyUrl": "https://jobs.ashbyhq.com/ramp/1515fe6d-1d8e-475b-a5ee-cefe43e78cb7/application",
+      "publishedAt": "2026-06-08T19:17:53.481+00:00"
+    },
+    {
+      "id": "29d188c7-0529-4bc8-a04a-57902df2a7ae",
+      "title": "Partner Development Representative | Financial Institutions",
+      "department": "Sales",
+      "location": "New York, NY (HQ)",
+      "isRemote": true,
+      "isListed": true,
+      "jobUrl": "https://jobs.ashbyhq.com/ramp/29d188c7-0529-4bc8-a04a-57902df2a7ae",
+      "applyUrl": "https://jobs.ashbyhq.com/ramp/29d188c7-0529-4bc8-a04a-57902df2a7ae/application",
+      "publishedAt": "2026-04-20T20:22:37.571+00:00"
+    },
+    {
+      "id": "0907ae2a-5334-4d64-9a76-cc9428224546",
+      "title": "Director, Performance Marketing",
+      "department": "Marketing",
+      "location": "New York, NY (HQ)",
+      "isRemote": true,
+      "isListed": true,
+      "jobUrl": "https://jobs.ashbyhq.com/ramp/0907ae2a-5334-4d64-9a76-cc9428224546",
+      "applyUrl": "https://jobs.ashbyhq.com/ramp/0907ae2a-5334-4d64-9a76-cc9428224546/application",
+      "publishedAt": "2026-06-11T17:21:26.410+00:00"
+    }
+  ]
+}

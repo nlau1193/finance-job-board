@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Hunt Board</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f6e7df'/%3E%3Cpath d='M16 22h32v26H16zM23 16h18v8H23z' fill='none' stroke='%239c4123' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --cream:#faf7f0; --paper:#fffdf8; --ink:#211f1a; --ink-soft:#6b6459;
+    --line:#e7ddcb; --line-soft:#f0e9da;
+    --green:#2f7d4f; --green-soft:#e9f2ea; --green-ink:#1f5836;
+    --clay:#bb4f2c; --clay-deep:#9c4123; --clay-soft:#f6e7df;
+    --amber:#9a6a16; --amber-soft:#f6ecd6;
+    --radius:14px; --shadow:0 1px 0 rgba(33,31,26,.04), 0 10px 30px -20px rgba(33,31,26,.4);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--cream); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1340px; margin:0 auto; padding:30px 22px 70px; }
+
+  .eyebrow { font:600 12px/1 var(--sans); letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 9px; }
+  h1.title { font-family:var(--serif); font-weight:600; font-size:clamp(28px,5vw,40px); line-height:1.04; letter-spacing:-.01em; margin:0 0 13px; }
+  .status { display:inline-flex; align-items:center; gap:9px; flex-wrap:wrap; padding:9px 14px; border-radius:999px; font-size:13.5px; font-weight:500; background:var(--green-soft); color:var(--green-ink); border:1px solid #cfe3d4; }
+  .status.stale, .status.partial { background:var(--amber-soft); color:var(--amber); border-color:#e8d6a8; }
+  .status.empty { background:#f1ece0; color:var(--ink-soft); border-color:var(--line); }
+  .status.sample { background:var(--amber-soft); color:var(--amber); border-color:#e8d6a8; }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--green); flex:none; }
+  .status.stale .dot, .status.partial .dot { background:var(--amber); } .status.empty .dot { background:var(--ink-soft); }
+  .status .sep { opacity:.45; } .status .muted { opacity:.8; }
+  .applylane { display:inline-flex; align-items:center; gap:8px; margin-left:10px; padding:7px 13px; border-radius:999px; background:var(--clay-soft); color:var(--clay-deep); font:600 13px var(--sans); border:1px solid #ecc9ba; }
+  .applylane .ring { font-variant-numeric:tabular-nums; }
+
+  .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:22px 0 10px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .search { flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:0 12px; }
+  .search:focus-within { border-color:var(--ink-soft); box-shadow:0 0 0 3px rgba(33,31,26,.06); }
+  .search svg { flex:none; color:var(--ink-soft); }
+  .search input { flex:1; border:0; outline:0; background:transparent; color:var(--ink); font:400 15px var(--sans); padding:11px 0; min-width:0; }
+  select, .toggle { font:500 13.5px var(--sans); color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:10px 12px; cursor:pointer; min-height:44px; }
+  select:hover, .toggle:hover { border-color:var(--ink-soft); }
+  .toggle { display:inline-flex; align-items:center; gap:8px; user-select:none; }
+  .toggle input { width:16px; height:16px; accent-color:var(--green); margin:0; }
+  .count { color:var(--ink-soft); font-size:13px; margin:2px 0 14px; }
+
+  .layout { display:grid; grid-template-columns:minmax(300px,340px) 1fr; gap:18px; align-items:start; }
+  .list { display:flex; flex-direction:column; gap:10px; max-height:calc(100vh - 40px); overflow:auto; padding-right:4px; }
+  .list::-webkit-scrollbar { width:8px; } .list::-webkit-scrollbar-thumb { background:#e0d6c2; border-radius:8px; }
+
+  .row { position:relative; text-align:left; width:100%; background:var(--paper); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:13px 14px 13px 17px; cursor:pointer; font:inherit; color:inherit; }
+  .row::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--green); border-radius:12px 0 0 12px; }
+  .row.read::before { background:var(--line); } .row.read { opacity:.74; }
+  .row.dismissed::before { background:#cdbfa6; } .row.dismissed { opacity:.5; }
+  .row.dismissed .row-title { text-decoration:line-through; }
+  .row:hover { border-color:#d8ccb2; }
+  .row.active { border-color:var(--clay); box-shadow:0 0 0 2px var(--clay-soft), var(--shadow); }
+  .show-more { width:100%; background:var(--paper); border:1px dashed #cdbfa6; color:var(--clay-deep); font:600 14px var(--sans); padding:12px 14px; border-radius:12px; cursor:pointer; min-height:46px; }
+  .show-more:hover { border-color:var(--clay); background:var(--clay-soft); }
+  .row-top { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .row-company { font:600 11px/1 var(--sans); letter-spacing:.11em; text-transform:uppercase; color:var(--clay); }
+  .row-title { font-family:var(--serif); font-weight:600; font-size:16px; line-height:1.22; margin:5px 0 6px; }
+  .row-meta { display:flex; gap:7px; flex-wrap:wrap; color:var(--ink-soft); font-size:12.5px; align-items:center; }
+  .row-meta .remote { color:var(--green-ink); font-weight:600; } .row-meta .sep { opacity:.4; } .row-meta .pay { color:var(--ink); font-weight:600; }
+  .fitpill { font:700 9.5px var(--sans); letter-spacing:.06em; padding:3px 7px; border-radius:6px; flex:none; }
+  .row-pills { display:flex; gap:6px; align-items:center; flex:none; }
+  .effpill { font:700 9px var(--sans); letter-spacing:.03em; padding:3px 7px; border-radius:6px; flex:none; display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+  .eff-quick { background:var(--green-soft); color:var(--green-ink); opacity:.72; } .eff-light { background:var(--amber-soft); color:var(--amber); } .eff-heavy { background:#f3e3df; color:var(--clay-deep); }
+  .fit-APPLY { background:var(--green-soft); color:var(--green-ink); } .fit-STRETCH { background:var(--amber-soft); color:var(--amber); } .fit-SKIP { background:#efe9dd; color:var(--ink-soft); }
+  .warmdot { color:var(--clay); font-weight:700; }
+  .applied-tag { font:700 9.5px var(--sans); color:var(--green-ink); }
+
+  .detail { position:sticky; top:20px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); max-height:calc(100vh - 40px); overflow:auto; }
+  .detail-inner { padding:26px 30px 34px; }
+  .detail .back { display:none; }
+  .d-company { font:600 12px/1 var(--sans); letter-spacing:.12em; text-transform:uppercase; color:var(--clay); margin-bottom:8px; }
+  .d-title { font-family:var(--serif); font-weight:600; font-size:25px; line-height:1.15; letter-spacing:-.01em; margin:0 0 11px; }
+  .d-facts { display:flex; gap:8px; flex-wrap:wrap; color:var(--ink-soft); font-size:13.5px; align-items:center; }
+  .d-facts .remote { color:var(--green-ink); font-weight:600; } .d-facts .sep { opacity:.4; } .d-facts .pay { color:var(--ink); font-weight:600; }
+  .d-actions { display:flex; gap:9px; align-items:center; flex-wrap:wrap; margin:16px 0 0; }
+  a.apply { display:inline-flex; align-items:center; gap:8px; text-decoration:none; background:var(--clay); color:#fff; font:600 14px var(--sans); padding:11px 18px; border-radius:10px; min-height:44px; box-sizing:border-box; }
+  a.apply:hover { background:var(--clay-deep); } a.apply .arrow { transition:transform .18s ease; } a.apply:hover .arrow { transform:translateX(4px); }
+  .sample-apply { display:inline-flex; align-items:center; background:var(--amber-soft); color:var(--amber); border:1px solid #e8d6a8; font:600 13px var(--sans); padding:11px 14px; border-radius:10px; min-height:44px; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--ink-soft); font:500 13.5px var(--sans); padding:11px 14px; border-radius:10px; cursor:pointer; min-height:44px; }
+  button.ghost:hover { border-color:var(--ink-soft); color:var(--ink); } button.ghost.on { background:var(--ink); color:var(--cream); border-color:var(--ink); }
+  button.ghost.applied { background:var(--green); color:#fff; border-color:var(--green); }
+  a:focus-visible, button:focus-visible, .row:focus-visible, select:focus-visible, .search:focus-within { outline:2px solid var(--clay); outline-offset:2px; }
+
+  /* detail body: description (main) + enrichment rail (right) */
+  .d-body { display:grid; grid-template-columns:1fr 290px; gap:26px; margin-top:20px; padding-top:20px; border-top:1px solid var(--line); align-items:start; }
+  .rail { display:flex; flex-direction:column; gap:12px; }
+  .ecard { background:#fffaf0; border:1px solid var(--line); border-radius:12px; padding:13px 15px; }
+  .ecard.warm { background:var(--clay-soft); border-color:#ecc9ba; }
+  .ecard h4 { margin:0 0 8px; font:700 10.5px var(--sans); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
+  .ecard.warm h4 { color:var(--clay-deep); }
+  .fitbig { display:inline-block; font:700 12px var(--sans); letter-spacing:.05em; padding:5px 11px; border-radius:8px; margin-bottom:8px; }
+  .echip { display:inline-block; font:500 12px var(--sans); background:#f1ece0; color:var(--ink); border-radius:999px; padding:3px 9px; margin:0 4px 4px 0; }
+  .echip.flag { background:var(--amber-soft); color:var(--amber); } .echip.miss { background:#f3e3df; color:var(--clay-deep); }
+  .apq { font-size:12.5px; color:var(--ink); margin:4px 0; padding-left:9px; border-left:2px solid #e6dcc7; line-height:1.35; }
+  .apq .req { color:var(--clay-deep); font-weight:700; }
+  .apdraft { margin:5px 0 2px; }
+  .apdraft summary { cursor:pointer; font:600 11.5px var(--sans); color:var(--green-ink); list-style:none; display:inline-flex; align-items:center; gap:4px; }
+  .apdraft summary::-webkit-details-marker { display:none; }
+  .apdraft[open] summary { margin-bottom:5px; }
+  .apdraft-body { white-space:pre-wrap; font-size:12.5px; line-height:1.5; color:var(--ink); background:var(--green-soft); border:1px solid #cfe3d4; border-radius:8px; padding:9px 11px; }
+  .apcopy { float:right; margin:-2px -3px 4px 8px; font:600 10.5px var(--sans); color:var(--green-ink); background:transparent; border:1px solid #cfe3d4; border-radius:6px; padding:2px 8px; cursor:pointer; }
+  .apcopy:hover { border-color:var(--green-ink); }
+  .apsrc { font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
+  .apsrc .echip { font-size:11px; padding:2px 8px; margin:0 3px 2px 0; }
+  .apwarn { font-size:11.5px; color:var(--amber); margin-top:4px; line-height:1.4; }
+  .apq-sub { font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.4; }
+  .warmperson { font-size:13px; margin:3px 0; } .warmperson b { color:var(--ink); } .warmperson span { color:var(--clay-deep); }
+  .warm-cta { display:block; margin-top:8px; font:600 12.5px var(--sans); color:var(--clay-deep); text-decoration:underline; cursor:pointer; background:none; border:0; padding:0; }
+  .efact { font-size:13px; color:var(--ink); margin:2px 0; } .efact .lbl { color:var(--ink-soft); }
+  .emoney { font-family:var(--serif); font-size:19px; font-weight:600; color:var(--ink); }
+  .estale { color:var(--ink-soft); font-size:12.5px; font-style:italic; }
+
+  .prose { font-size:15px; line-height:1.62; color:#2c2a24; }
+  .prose p { margin:0 0 13px; } .prose strong { color:var(--ink); }
+  .prose ul, .prose ol { margin:0 0 14px; padding-left:22px; } .prose li { margin:4px 0; }
+  .prose h1,.prose h2,.prose h3,.prose h4 { font-family:var(--serif); color:var(--ink); font-weight:600; font-size:17px; margin:20px 0 9px; }
+  .prose a { color:var(--clay-deep); text-underline-offset:2px; }
+  .prose blockquote { margin:0 0 13px; padding-left:14px; border-left:3px solid var(--line); color:var(--ink-soft); }
+  .prose hr { border:0; border-top:1px solid var(--line); margin:18px 0; }
+  .no-desc { color:var(--ink-soft); font-style:italic; }
+
+  .empty-state { text-align:center; padding:60px 24px; color:var(--ink-soft); }
+  .empty-state h2 { font-family:var(--serif); color:var(--ink); font-size:21px; margin:0 0 8px; font-weight:600; }
+  .empty-state code, .no-desc code, .estale code { background:#f1ece0; padding:2px 7px; border-radius:6px; font-size:13px; }
+  .detail-empty { display:flex; align-items:center; justify-content:center; min-height:360px; }
+
+  footer.note { margin-top:30px; padding-top:16px; border-top:1px solid var(--line); color:var(--ink-soft); font-size:12.5px; line-height:1.6; }
+  footer.note strong { color:var(--ink); font-weight:600; }
+
+  /* Refresh button */
+  .refresh-btn { display:inline-flex; align-items:center; gap:7px; font:600 13.5px var(--sans); color:var(--clay-deep); background:var(--clay-soft); border:1px solid #ecc9ba; border-radius:10px; padding:10px 15px; cursor:pointer; min-height:44px; }
+  .refresh-btn:hover { background:#f2ddd2; border-color:#e3b7a3; }
+  .refresh-btn:disabled { opacity:.55; cursor:progress; }
+  .refresh-btn .ricon { font-size:16px; line-height:1; display:inline-block; }
+  .refresh-btn.spinning .ricon { animation:rspin 1.1s linear infinite; }
+
+  /* Refresh modal / overlay */
+  .rf-back { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:22px; background:rgba(33,31,26,.42); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); animation:rfade .18s ease; }
+  .rf-back[hidden] { display:none; }
+  .rf-modal { width:100%; max-width:440px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 24px 60px -24px rgba(33,31,26,.55); padding:26px 26px 22px; animation:rpop .2s cubic-bezier(.2,.8,.3,1); }
+  .rf-modal h2 { font-family:var(--serif); font-weight:600; font-size:22px; line-height:1.15; margin:0 0 10px; color:var(--ink); }
+  .rf-modal p { margin:0 0 14px; font-size:14.5px; line-height:1.55; color:var(--ink-soft); }
+  .rf-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; flex-wrap:wrap; }
+  .rf-actions[hidden] { display:none; }
+  .rf-btn { font:600 14px var(--sans); border-radius:10px; padding:11px 18px; min-height:44px; cursor:pointer; border:1px solid var(--line); }
+  .rf-btn.primary { background:var(--green); color:#fff; border-color:var(--green); }
+  .rf-btn.primary:hover { background:var(--green-ink); border-color:var(--green-ink); }
+  .rf-btn.secondary { background:transparent; color:var(--ink-soft); }
+  .rf-btn.secondary:hover { border-color:var(--ink-soft); color:var(--ink); }
+  .rf-note { margin:14px 0 0; padding:11px 13px; background:var(--amber-soft); border:1px solid #e8d6a8; border-radius:10px; color:var(--amber); font-size:13px; line-height:1.5; }
+  .rf-note code { background:#efe1c0; padding:1px 6px; border-radius:5px; }
+
+  /* Loading state inside the modal */
+  .rf-load { text-align:center; }
+  .rf-ring { width:46px; height:46px; margin:6px auto 16px; border-radius:50%; border:3px solid var(--clay-soft); border-top-color:var(--clay); animation:rspin 1s linear infinite; }
+  .rf-phase { font-family:var(--serif); font-weight:600; font-size:18px; color:var(--ink); margin:0 0 6px; }
+  .rf-msg { font-size:13px; color:var(--ink-soft); min-height:18px; margin:0 0 16px; }
+  .rf-bar { position:relative; height:9px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+  .rf-bar-fill { position:absolute; inset:0 auto 0 0; width:0; background:var(--green); border-radius:999px; transition:width .5s ease; }
+  .rf-bar.indeterminate .rf-bar-fill { width:38%; animation:rslide 1.4s ease-in-out infinite; }
+  .rf-pct { font-size:12px; color:var(--ink-soft); margin:9px 0 0; font-variant-numeric:tabular-nums; }
+  .rf-wait { font-size:12.5px; color:var(--ink-soft); margin:16px 0 0; line-height:1.5; }
+  .rf-load.done .rf-ring { border:3px solid var(--green-soft); border-top-color:var(--green); animation:none; background:var(--green); }
+  .rf-load.done .rf-ring::after { content:"\2713"; color:#fff; font-size:24px; line-height:46px; display:block; }
+
+  @keyframes rspin { to { transform:rotate(360deg); } }
+  @keyframes rslide { 0% { left:-38%; } 100% { left:100%; } }
+  @keyframes rfade { from { opacity:0; } to { opacity:1; } }
+  @keyframes rpop { from { opacity:0; transform:translateY(8px) scale(.98); } to { opacity:1; transform:none; } }
+
+  @media (prefers-reduced-motion:reduce) {
+    .refresh-btn.spinning .ricon, .rf-ring, .rf-bar.indeterminate .rf-bar-fill, .rf-back, .rf-modal { animation:none !important; }
+    .rf-bar.indeterminate .rf-bar-fill { width:100%; left:0; opacity:.6; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+  @media (max-width:1080px) { .d-body { grid-template-columns:1fr; } .rail { order:-1; } }
+  @media (max-width:880px) {
+    .layout { grid-template-columns:1fr; }
+    .list { max-height:none; overflow:visible; }
+    .detail { position:fixed; inset:0; z-index:50; max-height:none; border-radius:0; border:0; transform:translateX(100%); transition:transform .22s ease; }
+    body.detail-open .detail { transform:translateX(0); } body.detail-open { overflow:hidden; }
+    .detail .back { display:inline-flex; align-items:center; gap:7px; background:transparent; border:0; color:var(--ink-soft); font:600 14px var(--sans); cursor:pointer; padding:6px 0; margin-bottom:14px; }
+    .detail-empty { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow" id="eyebrow">Official careers data · your titles · your locations</p>
+    <h1 class="title">Your Job Hunt Board</h1>
+    <div id="status"></div>
+  </header>
+
+  <div class="controls" role="search">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="Search role, company, location&hellip;" aria-label="Search postings">
+    </label>
+    <select id="sort" aria-label="Sort">
+      <option value="newest">Newest first</option>
+      <option value="fit">Best fit first</option>
+      <option value="quickwins">Quick wins first</option>
+      <option value="company">Company A–Z</option>
+    </select>
+    <select id="company-filter" aria-label="Filter by company"></select>
+    <label class="toggle"><input type="checkbox" id="hide-read"> Hide read</label>
+    <label class="toggle"><input type="checkbox" id="hide-dismissed" checked> Hide dismissed</label>
+    <button type="button" class="refresh-btn" id="refresh-btn" aria-label="Refresh board with today's live postings"><span class="ricon" aria-hidden="true">&#8635;</span> Refresh</button>
+  </div>
+  <p class="count" id="count"></p>
+
+  <main class="layout">
+    <div class="list" id="list" role="listbox" tabindex="0" aria-label="Job postings" aria-activedescendant=""></div>
+    <section class="detail" id="detail" role="dialog" aria-modal="false" aria-labelledby="detail-title"></section>
+  </main>
+
+  <footer class="note" id="board-note"></footer>
+</div>
+
+<div class="rf-back" id="rf-back" role="dialog" aria-modal="true" aria-labelledby="rf-heading" hidden>
+  <div class="rf-modal" id="rf-modal">
+    <div class="rf-confirm" id="rf-confirm">
+      <h2 id="rf-heading">Refresh your board?</h2>
+      <p>This checks every company in your search for today&rsquo;s live postings. It can take up to ~15 minutes &mdash; you can keep this tab open and watch the progress.</p>
+      <div class="rf-note" id="rf-noserver" hidden></div>
+      <div class="rf-actions">
+        <button type="button" class="rf-btn secondary" id="rf-cancel">Cancel</button>
+        <button type="button" class="rf-btn primary" id="rf-go">Refresh now</button>
+      </div>
+    </div>
+    <div class="rf-load" id="rf-loading" hidden tabindex="-1">
+      <div class="rf-ring" aria-hidden="true"></div>
+      <p class="rf-phase" id="rf-phase" aria-live="polite">Starting&hellip;</p>
+      <p class="rf-msg" id="rf-submsg"></p>
+      <div class="rf-bar indeterminate" id="rf-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Getting ready"><div class="rf-bar-fill" id="rf-fill"></div></div>
+      <p class="rf-pct" id="rf-pct"></p>
+      <p class="rf-wait" id="rf-wait">It&rsquo;s fine to wait here &mdash; keep this tab open and the board will refresh itself when it&rsquo;s ready.</p>
+      <div class="rf-actions" id="rf-erractions" hidden>
+        <button type="button" class="rf-btn secondary" id="rf-close">Close</button>
+        <button type="button" class="rf-btn primary" id="rf-retry">Try again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="board-data">__BOARD_DATA__</script>
+<script>
+(function () {
+  "use strict";
+  var payload = JSON.parse(document.getElementById("board-data").textContent || "{}");
+  var jobs = (payload.opportunities || []).slice();
+  var meta = payload.meta || {};
+  var PROFILE_KEY = String(meta.search_profile_key || (meta.sample ? "demo" : "legacy"));
+  var LS_KEY = "job-hunt-board-state-v2:" + PROFILE_KEY;
+  var LEGACY_LS_KEY = "finance-job-board-state-v1";
+  var selectedId = null, detailTrigger = null;
+  var visibleLimit = 100, PAGE_SIZE = 100;
+
+  var overlay = {};
+  try {
+    var storedOverlay = JSON.parse(localStorage.getItem(LS_KEY) || (meta.search_profile_key ? "{}" : localStorage.getItem(LEGACY_LS_KEY)) || "{}");
+    overlay = storedOverlay && typeof storedOverlay === "object" && !Array.isArray(storedOverlay) ? storedOverlay : {};
+  } catch (e) { overlay = {}; }
+  function saveOverlay() { try { localStorage.setItem(LS_KEY, JSON.stringify(overlay)); } catch (e) {} }
+  function todayKey() { var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+  function stateOf(j) { var o = overlay[j.id]; if (!o || typeof o !== "object" || Array.isArray(o)) o = {}; return { read: o.read != null ? o.read : !!j.read, dismissed: o.dismissed != null ? o.dismissed : !!j.dismissed, applied: o.applied || null }; }
+  function setState(id, patch) { overlay[id] = Object.assign({}, overlay[id], patch); saveOverlay(); render(); }
+  // When served (not opened as a file://), persist a dismiss to the server so the
+  // role is excluded from every future refresh — not just hidden in this browser.
+  function persistDismiss(id, dismissed) {
+    if (location.protocol === "file:") return;
+    try {
+      fetch("/api/dismiss", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, dismissed: dismissed }) }).catch(function(){});
+    } catch (e) {}
+  }
+  function appliedToday() { var t = todayKey(); return Object.keys(overlay).filter(function (k){ return overlay[k] && overlay[k].applied === t; }).length; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var listEl = $("list"), detailEl = $("detail"), countEl = $("count"), statusEl = $("status");
+  var eyebrowEl = $("eyebrow"), boardNoteEl = $("board-note");
+  var q = $("q"), sortSel = $("sort"), companyFilter = $("company-filter"), hideRead = $("hide-read"), hideDismissed = $("hide-dismissed");
+
+  function relTime(iso) { if (!iso) return ""; var t = new Date(iso).getTime(); if (isNaN(t)) return ""; var m=Math.round((Date.now()-t)/60000); if (m<1) return "just now"; if (m<60) return m+" min ago"; var h=Math.round(m/60); if (h<24) return h+(h===1?" hour ago":" hours ago"); var d=Math.round(h/24); return d+(d===1?" day ago":" days ago"); }
+  function ageDays(iso) { var t=new Date(iso).getTime(); return isNaN(t)?0:(Date.now()-t)/86400000; }
+  function ts(iso) { var t = iso ? new Date(iso).getTime() : NaN; return isNaN(t) ? 0 : t; }
+  function esc(s) { return String(s==null?"":s).replace(/[&<>"']/g, function (c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; }); }
+
+  function renderStatus() {
+    var companies = meta.companies_with_postings != null ? meta.companies_with_postings : new Set(jobs.map(function (j){return j.company;})).size;
+    var sample = meta.sample === true;
+    var compacted = meta.board_compacted === true;
+    var warnings = Array.isArray(meta.warnings) ? meta.warnings : [];
+    var errors = Array.isArray(meta.errors) ? meta.errors : [];
+    var stale = ageDays(payload.generated_at) > 2;
+    var partial = !sample && !stale && (warnings.length || errors.length);
+    var cls = jobs.length===0?"empty":(sample?"sample":(stale?"stale":(partial?"partial":""))), line;
+    if (sample) {
+      if (eyebrowEl) eyebrowEl.textContent = "Demo data · refresh before applying";
+      line='<strong>Demo data</strong> <span class="sep">·</span><strong>'+jobs.length+' fictional postings</strong> <span class="sep">·</span><span class="muted">run <code>./jobs refresh</code> for live jobs</span>';
+    } else if (eyebrowEl) {
+      eyebrowEl.textContent = "Official careers data · your titles · your locations";
+    }
+    if (!sample && jobs.length===0) line='<span class="muted">No postings loaded &mdash; run <code>./jobs refresh</code></span>';
+    else if (!sample && stale) line='<strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">data is '+Math.round(ageDays(payload.generated_at))+' days old — run <code>./jobs refresh</code></span>';
+    else if (!sample && !stale) line='Live official careers data <span class="sep">·</span><strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">updated '+relTime(payload.generated_at)+'</span>';
+    if (!sample && (warnings.length || errors.length)) {
+      var health = [];
+      if (errors.length) health.push(errors.length+" feeds unavailable");
+      if (warnings.length) health.push(warnings.length+" feeds capped");
+      line += ' <span class="sep">·</span><span class="muted">'+health.join(" · ")+' — run <code>./jobs doctor</code></span>';
+    }
+    var lane = '<span class="applylane">★ Applied today <span class="ring">'+appliedToday()+'</span></span>';
+    statusEl.innerHTML = '<span class="status '+cls+'"><span class="dot"></span>'+line+'</span>'+lane;
+    if (boardNoteEl) {
+      if (sample) {
+        boardNoteEl.innerHTML = '<strong>Demo board.</strong> These fictional roles are only here so you can explore the interface. Refresh before trusting a posting; demo roles never have a real application link.';
+      } else {
+        var healthNote = (warnings.length || errors.length) ? ' <strong>Refresh note:</strong> '+(errors.length ? errors.length+' feeds were unavailable' : '')+(errors.length && warnings.length ? ' and ' : '')+(warnings.length ? warnings.length+' feeds were capped' : '')+'. Run <code>./jobs doctor</code> for details.' : '';
+        var compactNote = compacted ? ' <strong>Large board:</strong> descriptions and form questions are shortened so search stays responsive; open the official posting for the full text.' : '';
+        boardNoteEl.innerHTML = '<strong>How this board works.</strong> Every live role comes from a company\'s official careers feed, with the full posting text when that feed provides it. The detail view adds fit, pay, freshness, and—only if you add a private connections CSV—people you know. <strong>Apply</strong> opens the exact posting.'+healthNote+compactNote+'<br><strong>Before you apply:</strong> confirm it\'s still open. Fit and connection matches are decision support, not gospel. This tool only <em>discovers</em>; it never applies, messages, logs into, or automates LinkedIn.';
+      }
+    }
+  }
+
+  function fillCompanies() {
+    var names = Array.from(new Set(jobs.map(function (j){return j.company;}))).sort();
+    companyFilter.innerHTML = '<option value="">All companies ('+names.length+')</option>'+names.map(function (n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join("");
+  }
+
+  function payOf(j) { return j.compensation || (j.enrichment && j.enrichment.fit ? null : null); }
+  function metaBits(j) {
+    var bits=[];
+    if (j.location) bits.push('<span'+(j.remote?' class="remote"':'')+'>'+esc(j.location)+'</span>');
+    else if (j.remote) bits.push('<span class="remote">Remote</span>');
+    if (j.workplace_type) bits.push('<span>'+esc(j.workplace_type)+'</span>');
+    if (j.employment_type) bits.push('<span>'+esc(j.employment_type)+'</span>');
+    if (j.team || j.department) bits.push('<span>'+esc(j.team||j.department)+'</span>');
+    if (j.posted_at) { var rt=relTime(j.posted_at); if (rt) bits.push('<span>posted '+rt+'</span>'); }
+    return bits.join('<span class="sep">·</span>');
+  }
+
+  function rowHtml(j) {
+    var st = stateOf(j);
+    var cls = "row"+(st.dismissed?" dismissed":(st.read?" read":""))+(j.id===selectedId?" active":"");
+    var e = j.enrichment || {}, fit = e.fit || {}, warm = e.warm, fr = e.freshness || {};
+    var bits = [];
+    if (j.location) bits.push('<span'+(j.remote?' class="remote"':'')+'>'+esc(j.location)+'</span>');
+    if (j.compensation) bits.push('<span class="pay">'+esc(j.compensation)+'</span>');
+    if (fr.badge) bits.push('<span'+(fr.hot?' class="remote"':'')+'>'+esc(fr.badge)+'</span>');
+    if (warm && warm.count) bits.push('<span class="warmdot">★ '+warm.count+' you know</span>');
+    if (st.applied) bits.push('<span class="applied-tag">✓ APPLIED</span>');
+    var pill = fit.bucket ? '<span class="fitpill fit-'+fit.bucket+'">'+fit.bucket+'</span>' : '';
+    var appS = e.application || {}, effPill = '';
+    if (appS.effort === 'quick') {
+      effPill = '<span class="effpill eff-quick" title="Resume only — no written questions">⚡ Quick</span>';
+    } else if (appS.effort) {
+      var nq = appS.prompt_count || 0;
+      effPill = '<span class="effpill eff-'+appS.effort+'" title="'+nq+' written question'+(nq===1?'':'s')+' to prep before applying">✍ '+nq+' Q</span>';
+    }
+    return '<button id="job-row-'+esc(j.id)+'" class="'+cls+'" role="option" tabindex="-1" aria-selected="'+(j.id===selectedId)+'" data-id="'+esc(j.id)+'">'+
+      '<div class="row-top"><span class="row-company">'+esc(j.company)+'</span><span class="row-pills">'+effPill+pill+'</span></div>'+
+      '<div class="row-title">'+esc(j.title)+'</div>'+
+      '<div class="row-meta">'+bits.join('<span class="sep">·</span>')+'</div></button>';
+  }
+
+  function railHtml(j) {
+    var e = j.enrichment || {}, fit = e.fit || {}, warm = e.warm, mom = e.momentum || {}, fr = e.freshness || {};
+    var cards = [];
+    // Warm path (the moat) first
+    var li = e.linkedin || {};
+    var liLinks = '';
+    if (li.connections) liLinks += '<a class="warm-cta" href="'+esc(li.connections)+'" target="_blank" rel="noopener noreferrer">🔎 Your connections at '+esc(j.company)+' →</a>';
+    if (li.recruiters) liLinks += '<a class="warm-cta" href="'+esc(li.recruiters)+'" target="_blank" rel="noopener noreferrer">🔎 Recruiters at '+esc(j.company)+' →</a>';
+    if (warm && warm.count) {
+      var ppl = (warm.people||[]).map(function (p){ return '<div class="warmperson"><b>'+esc(p.name)+'</b>'+(p.position?' <span>· '+esc(p.position)+'</span>':'')+'</div>'; }).join("");
+      cards.push('<div class="ecard warm"><h4>People you know</h4><div style="font-weight:600;margin-bottom:6px">'+warm.count+' '+(warm.count===1?'match':'matches')+' at '+esc(j.company)+'</div>'+ppl+'<button class="warm-cta" data-warm="'+esc(j.id)+'">Draft a referral ask →</button>'+liLinks+'</div>');
+    } else if (meta.connections_loaded) {
+      cards.push('<div class="ecard warm"><h4>People you know</h4><div class="estale" style="margin-bottom:6px">No match in your private connections file.</div>'+liLinks+'</div>');
+    }
+    // Fit & triage
+    if (fit.bucket) {
+      var col = fit.bucket==='APPLY'?'background:var(--green-soft);color:var(--green-ink)':fit.bucket==='STRETCH'?'background:var(--amber-soft);color:var(--amber)':'background:#efe9dd;color:var(--ink-soft)';
+      var why = (fit.why||[]).map(function (w){ return '<span class="echip">'+esc(w)+'</span>'; }).join("");
+      var flags = (fit.red_flags||[]).map(function (f){ return '<span class="echip flag">'+esc(f)+'</span>'; }).join("");
+      var miss = (fit.missing||[]).map(function (m){ return '<span class="echip miss">mentions '+esc(m)+'</span>'; }).join("");
+      cards.push('<div class="ecard"><h4>Fit</h4><span class="fitbig" style="'+col+'">'+fit.bucket+(fit.bucket==='APPLY'?' NOW':'')+'</span><div>'+why+flags+miss+'</div><div class="estale" style="margin-top:6px">APPLY = matches your search · STRETCH = senior or missing one · SKIP = below your level</div></div>');
+    }
+    // Application form preview — what applying actually asks for
+    var app = j.application || {}, appS = e.application || {};
+    if (appS.effort) {
+      var npr = appS.prompt_count || 0;
+      var effLabel = appS.effort==='quick' ? '🟢 Quick apply — resume only'
+                   : (appS.effort==='heavy'?'🔴 ':'🟡 ')+npr+' question'+(npr===1?'':'s')+' to prep';
+      var effCol = appS.effort==='quick' ? 'background:var(--green-soft);color:var(--green-ink)'
+                 : appS.effort==='light' ? 'background:var(--amber-soft);color:var(--amber)'
+                 : 'background:#f3e3df;color:var(--clay-deep)';
+      var gflags = (appS.flags||[]).map(function (f){ return '<span class="echip flag">'+esc(f)+'</span>'; }).join("");
+      var qs = (app.prompts||[]).map(function (p){
+        return '<div class="apq">'+(p.required?'<span class="req">*</span> ':'')+esc(p.label)+'</div>';
+      }).join("");
+      var qhdr = (app.prompts && app.prompts.length) ? '<div class="estale" style="margin-top:7px;margin-bottom:2px">Free-form questions to prep:</div>' : '';
+      cards.push('<div class="ecard"><h4>Application</h4><span class="fitbig" style="'+effCol+'">'+effLabel+'</span><div>'+gflags+'</div>'+qhdr+qs+'</div>');
+    } else if (app.extractable === false) {
+      var noForm = app.extractable === false ? '<div class="estale">Form preview isn\'t available for this ATS — the questions appear on the apply page.</div>' : '';
+      cards.push('<div class="ecard"><h4>Application</h4>'+noForm+'</div>');
+    }
+    // Comp
+    if (j.compensation) cards.push('<div class="ecard"><h4>Pay</h4><div class="emoney">'+esc(j.compensation)+'</div><div class="estale">from the posting</div></div>');
+    // Momentum
+    if (mom.matching_roles) {
+      var delta = (mom.matching_delta!=null && mom.matching_delta>0) ? ' <span style="color:var(--green-ink);font-weight:600">+'+mom.matching_delta+' this week</span>' : '';
+      cards.push('<div class="ecard"><h4>Company momentum</h4><div class="efact"><span class="lbl">Open roles:</span> '+mom.total_roles+'</div><div class="efact"><span class="lbl">Matching your search:</span> '+mom.matching_roles+delta+'</div></div>');
+    }
+    return cards.length ? '<div class="rail">'+cards.join("")+'</div>' : '<div class="rail"></div>';
+  }
+
+  function detailHtml(j) {
+    var st = stateOf(j);
+    var facts = [];
+    if (j.location) facts.push('<span'+(j.remote?' class="remote"':'')+'>'+esc(j.location)+'</span>');
+    if (j.workplace_type) facts.push('<span>'+esc(j.workplace_type)+'</span>');
+    if (j.employment_type) facts.push('<span>'+esc(j.employment_type)+'</span>');
+    if (j.team || j.department) facts.push('<span>'+esc(j.team||j.department)+'</span>');
+    if (j.compensation) facts.push('<span class="pay">'+esc(j.compensation)+'</span>');
+    if (j.posted_at) { var rt=relTime(j.posted_at); if (rt) facts.push('<span>posted '+rt+'</span>'); }
+    var desc = j.description_html ? '<div class="prose">'+j.description_html+'</div>' : '<p class="no-desc">No description from this feed — open the official posting with <strong>Apply</strong>.</p>';
+    if (meta.board_compacted) desc += '<p class="no-desc">This large board shows a short preview to keep search fast. Open the official posting for the full description.</p>';
+    var applyAction = meta.sample
+      ? '<span class="sample-apply" role="note">Demo only — refresh for a live application</span>'
+      : '<a class="apply" href="'+esc(j.url)+'" target="_blank" rel="noopener noreferrer" data-apply="'+esc(j.id)+'">Apply on official site <span class="arrow">&rarr;</span></a>';
+    return '<div class="detail-inner">'+
+      '<button class="back" type="button" id="detail-back">&larr; All jobs</button>'+
+      '<div class="d-company">'+esc(j.company)+'</div>'+
+      '<h2 class="d-title" id="detail-title">'+esc(j.title)+'</h2>'+
+      '<div class="d-facts">'+facts.join('<span class="sep">·</span>')+'</div>'+
+      '<div class="d-actions">'+
+        applyAction+
+        '<button class="ghost'+(st.applied?' applied':'')+'" data-act="applied" data-id="'+esc(j.id)+'">'+(st.applied?'✓ Applied':'Mark applied')+'</button>'+
+        '<button class="ghost'+(st.read?' on':'')+'" data-act="read" data-id="'+esc(j.id)+'">'+(st.read?'Read ✓':'Mark read')+'</button>'+
+        '<button class="ghost'+(st.dismissed?' on':'')+'" data-act="dismiss" data-id="'+esc(j.id)+'">'+(st.dismissed?'Dismissed':'Dismiss')+'</button>'+
+      '</div>'+
+      '<div class="d-body">'+desc+railHtml(j)+'</div></div>';
+  }
+
+  function visibleJobs() {
+    var term=(q.value||"").trim().toLowerCase(), comp=companyFilter.value, hr=hideRead.checked, hd=hideDismissed.checked;
+    var arr = jobs.filter(function (j) {
+      var st = stateOf(j);
+      if (hd && st.dismissed) return false;
+      if (hr && st.read) return false;
+      if (comp && j.company !== comp) return false;
+      if (term) { var hay=(j.title+" "+j.company+" "+(j.location||"")+" "+(j.team||"")+" "+(j.department||"")).toLowerCase(); if (hay.indexOf(term)===-1) return false; }
+      return true;
+    });
+    var mode = sortSel.value;
+    var rank = { APPLY:0, STRETCH:1, SKIP:2 };
+    arr.sort(function (a, b) {
+      if (mode === "company") return a.company.toLowerCase().localeCompare(b.company.toLowerCase()) || ts(b.posted_at)-ts(a.posted_at);
+      if (mode === "fit") {
+        var fa=(a.enrichment&&a.enrichment.fit?rank[a.enrichment.fit.bucket]:3), fb=(b.enrichment&&b.enrichment.fit?rank[b.enrichment.fit.bucket]:3);
+        if (fa!==fb) return fa-fb; return ts(b.posted_at)-ts(a.posted_at);
+      }
+      if (mode === "quickwins") {
+        // fit-worthy roles you can apply to fastest: fit rank dominates, then apply-effort
+        var effRank = { quick:0, light:1, heavy:2 };
+        function score(x){ var en=x.enrichment||{}; var f=(en.fit?rank[en.fit.bucket]:3);
+          var ef=(en.application&&en.application.effort in effRank)?effRank[en.application.effort]:3;
+          return f*10 + ef; }
+        var sa=score(a), sb=score(b);
+        if (sa!==sb) return sa-sb; return ts(b.posted_at)-ts(a.posted_at);
+      }
+      return ts(b.posted_at) - ts(a.posted_at); // newest
+    });
+    return arr;
+  }
+
+  function renderDetail() {
+    var j = jobs.filter(function (x){return x.id===selectedId;})[0];
+    if (!j) {
+      var emptyMobile = window.matchMedia("(max-width:880px)").matches;
+      var emptyOpen = emptyMobile && document.body.classList.contains("detail-open");
+      detailEl.setAttribute("aria-modal", "false");
+      detailEl.setAttribute("aria-hidden", emptyMobile && !emptyOpen ? "true" : "false");
+      if (emptyMobile && !emptyOpen) detailEl.setAttribute("inert", ""); else detailEl.removeAttribute("inert");
+      detailEl.innerHTML = '<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">Select a role</h2><p>Click a job to read the full posting and your edge here.</p></div></div>';
+      return;
+    }
+    detailEl.innerHTML = detailHtml(j); detailEl.scrollTop = 0;
+    var mobile = window.matchMedia("(max-width:880px)").matches;
+    var detailOpen = mobile && document.body.classList.contains("detail-open");
+    detailEl.setAttribute("aria-modal", detailOpen ? "true" : "false");
+    detailEl.setAttribute("aria-hidden", mobile && !detailOpen ? "true" : "false");
+    if (mobile && !detailOpen) detailEl.setAttribute("inert", ""); else detailEl.removeAttribute("inert");
+    if (mobile && document.body.classList.contains("detail-open")) {
+      var back = $("detail-back");
+      if (back && !detailEl.contains(document.activeElement)) back.focus();
+    }
+  }
+
+  function selectJob(id) {
+    selectedId = id;
+    var mobile = window.matchMedia("(max-width:880px)").matches;
+    if (mobile) {
+      detailTrigger = document.activeElement && document.activeElement.classList.contains("row") ? document.activeElement : null;
+      document.body.classList.add("detail-open");
+    }
+    Array.prototype.forEach.call(listEl.querySelectorAll(".row"), function (el) { var on=el.getAttribute("data-id")===id; el.classList.toggle("active", on); el.setAttribute("aria-selected", on); });
+    var selectedRow = listEl.querySelector('.row[data-id="'+cssEscape(id)+'"]');
+    listEl.setAttribute("aria-activedescendant", selectedRow ? selectedRow.id : "");
+    renderDetail();
+    if (mobile) {
+      var back = $("detail-back");
+      if (back) back.focus();
+    }
+  }
+  function closeDetail(restoreFocus) {
+    var trigger = detailTrigger;
+    detailTrigger = null;
+    document.body.classList.remove("detail-open");
+    detailEl.setAttribute("aria-modal", "false");
+    if (window.matchMedia("(max-width:880px)").matches) { detailEl.setAttribute("aria-hidden", "true"); detailEl.setAttribute("inert", ""); }
+    if (restoreFocus !== false && trigger && document.contains(trigger)) trigger.focus();
+  }
+
+  function render() {
+    var shown = visibleJobs();
+    renderStatus();
+    var mobile = window.matchMedia("(max-width:880px)").matches;
+    if (jobs.length===0) {
+      if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
+      listEl.innerHTML='<div class="empty-state"><h2>No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div>';
+      detailEl.innerHTML='<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div></div>'; countEl.textContent=""; return;
+    }
+    if (shown.length===0) {
+      if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
+      listEl.innerHTML='<div class="empty-state"><h2>Nothing matches</h2><p>No roles match your filters. Clear search, show read/dismissed, or run <code>./jobs refresh</code>.</p></div>';
+      selectedId=null; renderDetail(); countEl.textContent="Showing 0 of "+jobs.length+" postings"; return;
+    }
+    var page = shown.slice(0, visibleLimit);
+    var selectedVisible = page.some(function (j){return j.id===selectedId;});
+    if (mobile && document.body.classList.contains("detail-open") && !selectedVisible) closeDetail(false);
+    listEl.innerHTML = page.map(rowHtml).join("");
+    if (shown.length > page.length) {
+      var remaining = shown.length - page.length;
+      listEl.innerHTML += '<button class="show-more" id="show-more" type="button">Show next '+Math.min(PAGE_SIZE, remaining)+' roles <span>('+remaining+' more)</span></button>';
+    }
+    countEl.textContent = shown.length > page.length
+      ? "Showing first "+page.length+" of "+shown.length+" matching postings"
+      : "Showing "+shown.length+" of "+jobs.length+" postings";
+    if (!selectedVisible) selectedId = mobile ? null : page[0].id;
+    if (selectedId) { var act=listEl.querySelector('.row[data-id="'+cssEscape(selectedId)+'"]'); if (act) { act.classList.add("active"); act.setAttribute("aria-selected","true"); listEl.setAttribute("aria-activedescendant", act.id); } else listEl.setAttribute("aria-activedescendant", ""); }
+    renderDetail();
+  }
+  function cssEscape(s){ return String(s).replace(/["\\\]]/g, "\\$&"); }
+
+  listEl.addEventListener("click", function (e) {
+    var more = e.target.closest("#show-more");
+    if (more) { visibleLimit += PAGE_SIZE; render(); return; }
+    var btn=e.target.closest(".row"); if (btn) selectJob(btn.getAttribute("data-id"));
+  });
+  async function copyText(text) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error("Clipboard access is unavailable");
+    await navigator.clipboard.writeText(text);
+  }
+  detailEl.addEventListener("click", async function (e) {
+    if (e.target.closest("#detail-back")) { closeDetail(); return; }
+    var cp = e.target.closest(".apcopy");
+    if (cp) {
+      e.preventDefault();
+      try {
+        await copyText(cp.getAttribute("data-copy") || "");
+        cp.textContent = "Copied ✓";
+      } catch (err) {
+        cp.textContent = "Copy failed";
+      }
+      setTimeout(function (){ cp.textContent = "Copy"; }, 1500);
+      return;
+    }
+    var warm = e.target.closest("[data-warm]");
+    if (warm) { var jj=jobs.filter(function(x){return x.id===warm.getAttribute("data-warm");})[0]; if (jj) await draftReferral(jj); return; }
+    var g = e.target.closest("button.ghost");
+    if (g) { var id=g.getAttribute("data-id"), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return; var st=stateOf(j); var act=g.getAttribute("data-act");
+      if (act==="read") setState(id,{read:!st.read});
+      else if (act==="applied") setState(id,{applied: st.applied?null:todayKey(), read:true});
+      else { var willDismiss=!st.dismissed; setState(id,{dismissed:willDismiss, read:willDismiss?true:st.read}); persistDismiss(id, willDismiss); } return; }
+    var a = e.target.closest("a.apply"); if (a) setState(a.getAttribute("data-apply"), {read:true});
+  });
+  async function draftReferral(j) {
+    var w=j.enrichment&&j.enrichment.warm, who=(w&&w.people&&w.people[0])?w.people[0].name.split(" ")[0]:"there";
+    var bio = meta.referral_bio ? " My background: "+meta.referral_bio+"." : "";
+    var msg = "Hi "+who+" — hope you're well! I saw "+j.company+" is hiring a "+j.title+" and I'm exploring my next role."+bio+" Would you be open to a quick chat about the team, or pointing me to the right person? Thanks so much!";
+    try {
+      await copyText(msg);
+      alert("Referral ask copied to clipboard:\n\n"+msg);
+    } catch (e) {
+      prompt("Copy this referral ask:", msg);
+    }
+  }
+  function refreshVisibleJobs() { visibleLimit = PAGE_SIZE; render(); }
+  // Search updates on every keystroke. Do not also listen for `change` on the
+  // search field: on touch browsers blur fires `change` between pointerdown
+  // and pointerup, replacing the row DOM and cancelling the user's tap.
+  q.addEventListener("input", refreshVisibleJobs);
+  [sortSel, companyFilter, hideRead, hideDismissed].forEach(function (el){
+    el.addEventListener("change", refreshVisibleJobs);
+  });
+  listEl.addEventListener("keydown", function (e) {
+    if (e.key==="Escape") { closeDetail(); return; }
+    if (e.key!=="ArrowDown" && e.key!=="ArrowUp") return;
+    var shown=visibleJobs(); if (!shown.length) return;
+    var idx=shown.findIndex(function (j){return j.id===selectedId;});
+    idx=e.key==="ArrowDown"?Math.min(shown.length-1,idx+1):Math.max(0,idx-1);
+    if (idx >= visibleLimit) visibleLimit = Math.ceil((idx + 1) / PAGE_SIZE) * PAGE_SIZE;
+    e.preventDefault(); selectJob(shown[idx].id);
+    var el=listEl.querySelector('.row[data-id="'+cssEscape(shown[idx].id)+'"]'); if (el) el.scrollIntoView({block:"nearest"});
+  });
+  document.addEventListener("keydown", function (e) {
+    if (document.body.classList.contains("detail-open") && e.key === "Tab") {
+      var detailFocusables = Array.prototype.filter.call(
+        detailEl.querySelectorAll("button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
+        function (el) { return !el.closest("[hidden]") && el.offsetParent !== null; }
+      );
+      if (!detailFocusables.length) {
+        e.preventDefault();
+        var detailBack = $("detail-back");
+        if (detailBack) detailBack.focus();
+      } else {
+        var detailFirst = detailFocusables[0], detailLast = detailFocusables[detailFocusables.length - 1];
+        if (e.shiftKey && (document.activeElement === detailFirst || !detailEl.contains(document.activeElement))) {
+          e.preventDefault(); detailLast.focus();
+        } else if (!e.shiftKey && (document.activeElement === detailLast || !detailEl.contains(document.activeElement))) {
+          e.preventDefault(); detailFirst.focus();
+        }
+      }
+      return;
+    }
+    if (e.key === "Escape" && document.body.classList.contains("detail-open")) {
+      e.preventDefault();
+      closeDetail();
+    }
+  });
+
+  // ---- Refresh experience -------------------------------------------------
+  var rfBtn = $("refresh-btn"), rfBack = $("rf-back"), rfConfirm = $("rf-confirm"), rfLoading = $("rf-loading");
+  var rfGo = $("rf-go"), rfCancel = $("rf-cancel"), rfClose = $("rf-close"), rfRetry = $("rf-retry");
+  var rfNoServer = $("rf-noserver"), rfPhase = $("rf-phase"), rfSubmsg = $("rf-submsg");
+  var rfBar = $("rf-bar"), rfFill = $("rf-fill"), rfPct = $("rf-pct"), rfWait = $("rf-wait");
+  var rfErrActions = $("rf-erractions"), rfLoad = rfLoading;
+  var pollTimer = null, POLL_MS = 2000, watching = false;
+  var pollFails = 0, MAX_POLL_FAILS = 5; // ~10s of missed polls → the server is gone
+  var rfPreviousFocus = null;
+
+  function rfFocusables() {
+    if (!rfBack || rfBack.hidden) return [];
+    return Array.prototype.filter.call(
+      rfBack.querySelectorAll("button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
+      function (el) { return !el.closest("[hidden]") && el.offsetParent !== null; }
+    );
+  }
+
+  var PHASES = {
+    idle: "Getting ready…",
+    starting: "Getting ready…",
+    discovering: "Checking official company job feeds…",
+    filtering: "Matching your search…",
+    forms: "Reading each application form…",
+    enriching: "Adding fit, pay & connection matches…",
+    saving: "Building your board…",
+    done: "Done!",
+    error: "Something went wrong."
+  };
+
+  function rfShowConfirm() {
+    rfPreviousFocus = document.activeElement;
+    rfConfirm.hidden = false; rfLoading.hidden = true;
+    rfErrActions.hidden = true; rfNoServer.hidden = true;
+    rfBack.hidden = false;
+    rfGo.focus();
+  }
+  function rfCloseModal() {
+    if (watching) return; // don't let user dismiss an active refresh accidentally
+    stopPolling();
+    rfBack.hidden = true;
+    var previous = rfPreviousFocus;
+    rfPreviousFocus = null;
+    if (previous && document.contains(previous)) previous.focus();
+    else if (rfBtn) rfBtn.focus();
+  }
+  function rfShowNoServer() {
+    rfNoServer.innerHTML = "In-page refresh needs the local app. Run <code>./jobs start</code>; it will open the right page for you.";
+    rfNoServer.hidden = false;
+    setBusy(false);
+  }
+  function setBusy(on) {
+    if (!rfBtn) return;
+    rfBtn.disabled = on;
+    rfBtn.classList.toggle("spinning", on);
+  }
+  function stopPolling() { if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; } }
+
+  function enterLoading() {
+    rfConfirm.hidden = true; rfLoading.hidden = false;
+    rfErrActions.hidden = true; rfWait.hidden = false;
+    rfLoad.classList.remove("done");
+    rfPhase.textContent = PHASES.idle; rfSubmsg.textContent = "";
+    rfBar.classList.add("indeterminate"); rfBar.removeAttribute("aria-valuenow"); rfBar.setAttribute("aria-valuetext", "Getting ready"); rfFill.style.width = ""; rfPct.textContent = "";
+    rfBack.hidden = false; watching = true; pollFails = 0; setBusy(true);
+    rfLoading.focus();
+  }
+
+  function applyStatus(s) {
+    var phase = s.phase || "idle";
+    rfPhase.textContent = PHASES[phase] || PHASES.idle;
+    rfSubmsg.textContent = s.message || ""; // textContent is XSS-safe, no esc() needed
+
+    if (phase === "discovering" && s.total) {
+      var pct = Math.max(0, Math.min(100, Math.round((s.done / s.total) * 100)));
+      rfBar.classList.remove("indeterminate");
+      rfBar.setAttribute("aria-valuenow", String(pct));
+      rfBar.setAttribute("aria-valuetext", pct + "% — " + (s.done || 0) + " of " + s.total + " company feeds checked");
+      rfFill.style.width = pct + "%";
+      rfPhase.textContent = "Checking official company job feeds… (" + (s.done || 0) + "/" + s.total + ")";
+      rfPct.textContent = pct + "%";
+    } else if (phase === "done") {
+      rfBar.classList.remove("indeterminate"); rfBar.setAttribute("aria-valuenow", "100"); rfBar.setAttribute("aria-valuetext", "Refresh complete"); rfFill.style.width = "100%"; rfPct.textContent = "100%";
+    } else {
+      rfBar.classList.add("indeterminate"); rfBar.removeAttribute("aria-valuenow"); rfBar.setAttribute("aria-valuetext", rfPhase.textContent || "Working"); rfFill.style.width = ""; rfPct.textContent = "";
+    }
+
+    if (phase === "done") {
+      watching = false; stopPolling();
+      rfLoad.classList.add("done");
+      var r = s.result || {};
+      if (r.postings != null) {
+        var health = [];
+        if (r.errors) health.push(r.errors + " feeds unavailable");
+        if (r.warnings) health.push(r.warnings + " feeds capped");
+        rfSubmsg.textContent = "Found " + r.postings + " postings from " + (r.companies != null ? r.companies : "your") + " companies." +
+          (health.length ? " " + health.join(" and ") + ". See the board note or ./jobs doctor." : "");
+      } else {
+        rfSubmsg.textContent = "";
+      }
+      rfWait.textContent = "Loading your fresh board…";
+      setTimeout(function () { window.location.reload(); }, 1200);
+    } else if (phase === "error") {
+      watching = false; stopPolling(); setBusy(false);
+      rfPhase.textContent = PHASES.error;
+      rfSubmsg.textContent = s.error || "The refresh could not finish. You can try again.";
+      rfWait.hidden = true;
+      rfBar.classList.remove("indeterminate"); rfFill.style.width = "";
+      rfErrActions.hidden = false;
+      rfRetry.focus();
+    }
+  }
+
+  function poll() {
+    fetch("/api/refresh/status", { headers: { "Accept": "application/json" } })
+      .then(function (r) {
+        if (!r.ok) {
+          var httpError = new Error("refresh_status_http_" + r.status);
+          httpError.httpStatus = r.status;
+          throw httpError;
+        }
+        return r.json();
+      })
+      .then(function (s) {
+        pollFails = 0;
+        applyStatus(s);
+        if (watching) pollTimer = setTimeout(poll, POLL_MS);
+      })
+      .catch(function (error) {
+        // A static file server or stale proxy commonly returns 404 for the
+        // local API. That is not a transient network hiccup: explain the
+        // setup fix immediately instead of trapping the user in a 10-second
+        // spinner while five failed polls accumulate.
+        if (error && error.httpStatus >= 400 && error.httpStatus < 500) {
+          watching = false;
+          stopPolling();
+          rfConfirm.hidden = false;
+          rfLoading.hidden = true;
+          rfShowNoServer();
+          return;
+        }
+        // Transient network hiccup while a refresh is in flight: keep trying a
+        // bit. But if the server is really gone (Ctrl+C, crash, sleep), surface
+        // the error UI so the modal doesn't trap the user on a spinner forever.
+        pollFails += 1;
+        if (pollFails >= MAX_POLL_FAILS) {
+          applyStatus({ phase: "error",
+                        error: "Lost contact with the local app — is ./jobs start still running? The refresh may still finish in the background." });
+          return;
+        }
+        if (watching) pollTimer = setTimeout(poll, POLL_MS);
+      });
+  }
+
+  function startRefresh() {
+    rfNoServer.hidden = true;
+    setBusy(true);
+    fetch("/api/refresh", { method: "POST", headers: { "Accept": "application/json" } })
+      .then(function (r) {
+        if (!r.ok) {
+          var httpError = new Error("refresh_http_" + r.status);
+          httpError.httpStatus = r.status;
+          throw httpError;
+        }
+        return r.json().catch(function () { return {}; });
+      })
+      .then(function (d) {
+        // started OR already_running -> either way we begin watching
+        enterLoading();
+        stopPolling();
+        poll();
+      })
+      .catch(function () {
+        // No server (opened as file://) or backend unreachable.
+        rfConfirm.hidden = false; rfLoading.hidden = true; watching = false;
+        rfShowNoServer();
+      });
+  }
+
+  if (rfBtn) rfBtn.addEventListener("click", rfShowConfirm);
+  if (rfGo) rfGo.addEventListener("click", startRefresh);
+  if (rfRetry) rfRetry.addEventListener("click", startRefresh);
+  if (rfCancel) rfCancel.addEventListener("click", rfCloseModal);
+  if (rfClose) rfClose.addEventListener("click", function () { watching = false; rfCloseModal(); });
+  if (rfBack) rfBack.addEventListener("click", function (e) { if (e.target === rfBack) rfCloseModal(); });
+  document.addEventListener("keydown", function (e) {
+    if (rfBack && !rfBack.hidden && e.key === "Tab") {
+      var focusables = rfFocusables();
+      if (!focusables.length) {
+        e.preventDefault();
+        if (rfLoading && !rfLoading.hidden) rfLoading.focus();
+        return;
+      }
+      var first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !rfBack.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !rfBack.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
+      }
+      return;
+    }
+    if (e.key === "Escape" && rfBack && !rfBack.hidden) { e.stopPropagation(); rfCloseModal(); }
+  }, true);
+
+  // Resume an in-progress refresh on load (one-shot status probe).
+  fetch("/api/refresh/status", { headers: { "Accept": "application/json" } })
+    .then(function (r) { if (!r.ok) throw new Error("refresh_status_http_" + r.status); return r.json(); })
+    .then(function (s) {
+      if (s && s.running) { enterLoading(); stopPolling(); poll(); }
+    })
+    .catch(function () { /* no server: refresh button will explain on click */ });
+
+  fillCompanies();
+  render();
+})();
+</script>
+</body>
+</html>
