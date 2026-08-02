@@ -16,8 +16,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
+import tempfile
 import threading
 from pathlib import Path
 
@@ -69,9 +71,10 @@ def cmd_setup(args) -> int:
         ok("Python dependency `requests` is installed")
 
     if not SEARCH_LOCAL.exists():
-        shutil.copy(SEARCH_EXAMPLE, SEARCH_LOCAL)
+        _ensure_search_local()
         ok("Created your private search preferences: config/search.local.json")
     else:
+        _ensure_search_local()
         ok("Private search preferences already present")
 
     companies = _load_companies()
@@ -244,10 +247,18 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
                 "company": r.get("company"),
                 "warning": f"Skipped {malformed} malformed posting row(s); other rows were kept",
             })
+        untrusted = int(r.get("dropped_untrusted_url", 0) or 0)
+        if untrusted:
+            warnings.append({
+                "company": r.get("company"),
+                "warning": f"Skipped {untrusted} posting link(s) outside the configured careers host",
+                "kind": "security",
+            })
     by_ats = {}
     for r in receipts:
         by_ats[r.get("ats", "?")] = by_ats.get(r.get("ats", "?"), 0) + (r.get("count") or 0)
     dropped = sum(r.get("dropped_non_actionable", 0) for r in receipts)
+    dropped_untrusted = sum(int(r.get("dropped_untrusted_url", 0) or 0) for r in receipts)
     dropped_malformed = sum(int(r.get("dropped_malformed", 0) or 0) for r in receipts)
     companies_with = len({o.company for o in merged})
 
@@ -257,6 +268,7 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
         "companies_with_postings": companies_with,
         "raw_matches": len(filtered),
         "dropped_non_actionable": dropped,
+        "dropped_untrusted_url": dropped_untrusted,
         "dropped_malformed": dropped_malformed,
         "by_ats": by_ats,
         "forms_extractable": sum(1 for o in filtered if (o.application or {}).get("extractable")),
@@ -763,7 +775,14 @@ def _profile_path() -> Path:
 
 def _ensure_search_local() -> Path:
     if not SEARCH_LOCAL.exists():
-        shutil.copy(SEARCH_EXAMPLE, SEARCH_LOCAL)
+        _atomic_private_write(SEARCH_LOCAL, SEARCH_EXAMPLE.read_text(encoding="utf-8"))
+    # Search preferences can contain a referral bio and are explicitly
+    # machine-local. Repair permissions on older installs before reading or
+    # rewriting them; a normal umask is not a privacy guarantee.
+    try:
+        SEARCH_LOCAL.chmod(0o600)
+    except OSError:
+        pass
     return SEARCH_LOCAL
 
 
@@ -853,15 +872,32 @@ def _port_arg(raw: str) -> int:
 
 def _write_search_config(config: dict) -> None:
     path = _ensure_search_local()
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    _atomic_private_write(path, json.dumps(config, indent=2, ensure_ascii=False) + "\n")
+
+
+def _atomic_private_write(path: Path, text: str) -> None:
+    """Write a local preference file with private mode before it is visible."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        fd = -1
+        Path(tmp_name).replace(path)
+    finally:
+        if fd != -1:
+            os.close(fd)
+        try:
+            Path(tmp_name).unlink()
+        except FileNotFoundError:
+            pass
 
 
 def cmd_configure(args) -> int:
     """Show or update the private, per-install search preferences."""
     if getattr(args, "reset", False):
-        shutil.copy(SEARCH_EXAMPLE, SEARCH_LOCAL)
+        _atomic_private_write(SEARCH_LOCAL, SEARCH_EXAMPLE.read_text(encoding="utf-8"))
         ok("Reset private search preferences to the public starter")
 
     try:

@@ -82,7 +82,7 @@ def test_refresh_pipeline_publishes_filtered_enriched_board(monkeypatch, tmp_pat
 
 def test_refresh_pipeline_surfaces_malformed_feed_rows_without_dropping_good_rows(monkeypatch, tmp_path):
     posting = _posting("2", "Financial Analyst")
-    board_path = _wire_pipeline(
+    _wire_pipeline(
         monkeypatch,
         tmp_path,
         raw=[posting],
@@ -179,7 +179,7 @@ def test_refresh_pipeline_does_not_advance_momentum_on_feed_outage(monkeypatch, 
     """A failed refresh keeps both the board and its previous delta baseline."""
     import json
 
-    board_path = _wire_pipeline(
+    _wire_pipeline(
         monkeypatch,
         tmp_path,
         raw=[],

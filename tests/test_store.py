@@ -72,6 +72,24 @@ def test_load_drops_corrupt_rows_and_records_recovery_warning(tmp_path):
     assert store.load_opportunities(path)[0].id == "ok"
 
 
+def test_load_rejects_string_read_state_instead_of_hiding_the_row(tmp_path):
+    path = tmp_path / "jobs.json"
+    path.write_text(
+        '{"version": 1, "meta": {}, "opportunities": [{"id":"bad",'
+        '"company":"Acme","title":"Role","location":"Remote",'
+        '"url":"https://boards.greenhouse.io/acme/jobs/1",'
+        '"ats":"greenhouse","company_slug":"acme","job_id":"1",'
+        '"read":"false","dismissed":"false"}]}',
+        encoding="utf-8",
+    )
+
+    data = store.load(path)
+
+    assert data["opportunities"] == []
+    assert any("invalid stored posting" in warning
+               for warning in data["meta"]["recovery_warnings"])
+
+
 def test_load_drops_non_actionable_live_rows_but_keeps_demo_rows(tmp_path):
     path = tmp_path / "jobs.json"
     path.write_text(

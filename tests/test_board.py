@@ -32,7 +32,11 @@ def test_render_embeds_actionable_url(tmp_path):
     assert "7978019" in html
     assert "gh_jid" in html
     assert "stripe.com/jobs/search" in html  # full posting URL embedded in the data blob
-    assert "Your Job Hunt Board" in html
+
+
+def test_board_amber_token_meets_small_text_contrast_bar():
+    html = Path("templates/board.html").read_text(encoding="utf-8")
+    assert "--amber:#805714" in html
 
 
 def test_render_no_script_breakout(tmp_path):

@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(ROOT))
 
-import pytest
+import pytest  # noqa: E402  (path bootstrap above is intentional)
 
 
 @pytest.fixture

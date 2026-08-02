@@ -157,7 +157,7 @@ def test_custom_location_preferences_are_honored():
 
 
 def test_is_fresh_30_day_cutoff():
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timezone
     from jobhunt.filter import is_fresh
     now = datetime(2026, 7, 7, tzinfo=timezone.utc)
 

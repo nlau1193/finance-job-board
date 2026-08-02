@@ -1,6 +1,7 @@
 """Private search preferences and first-run behavior."""
 
 import json
+import stat
 import types
 
 import jobs
@@ -45,6 +46,17 @@ def test_private_search_is_created_from_public_starter(tmp_path, monkeypatch):
     example, local = _isolate_search(tmp_path, monkeypatch)
     assert jobs._ensure_search_local() == local
     assert local.read_text(encoding="utf-8") == example.read_text(encoding="utf-8")
+    assert stat.S_IMODE(local.stat().st_mode) == 0o600
+
+
+def test_existing_private_search_permissions_are_repaired(tmp_path, monkeypatch):
+    _, local = _isolate_search(tmp_path, monkeypatch)
+    local.write_text("{}", encoding="utf-8")
+    local.chmod(0o644)
+
+    jobs._ensure_search_local()
+
+    assert stat.S_IMODE(local.stat().st_mode) == 0o600
 
 
 def test_configure_updates_search_without_losing_fit_rules(tmp_path, monkeypatch):
@@ -146,6 +158,7 @@ def test_configure_reset_restores_public_starter(tmp_path, monkeypatch):
     local.write_text('{"title_keywords":["changed"]}', encoding="utf-8")
     assert jobs.cmd_configure(_config_args(reset=True)) == 0
     assert local.read_text(encoding="utf-8") == example.read_text(encoding="utf-8")
+    assert stat.S_IMODE(local.stat().st_mode) == 0o600
 
 
 def test_profile_path_prefers_private_file(tmp_path, monkeypatch):

@@ -9,8 +9,8 @@ emits one.
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import re
+from urllib.parse import urlparse
 
 from . import application
 from .model import Opportunity, is_actionable_url, normalize_employment
@@ -27,6 +27,119 @@ FETCHERS = {
 
 DEFAULT_MAX_WORKERS = 8
 
+_EMPLOYER_HOST_ALIASES = {
+    # Exact exceptions for branded careers/vendor hosts. Never approve an
+    # arbitrary host just because it contains a company name.
+    "abnormalsecurity": {"abnormal.ai"},
+    "alloy": {"www.alloy.com"},
+    "airbnb": {"careers.airbnb.com"},
+    "betterment": {"www.betterment.com"},
+    "block": {"block.xyz"},
+    "brex": {"www.brex.com"},
+    "carvana": {"www.carvana.com"},
+    "classpass": {"www.playlist.com"},
+    "coinbase": {"www.coinbase.com"},
+    "cockroachlabs": {"www.cockroachlabs.com"},
+    "collectivehealth": {"jobs.collectivehealth.com"},
+    "cribl": {"cribl.io"},
+    "disco": {"www.csdisco.com"},
+    "databricks": {"databricks.com"},
+    "datadog": {"careers.datadoghq.com"},
+    "dropbox": {"jobs.dropbox.com"},
+    "fanduel": {"www.fanduel.careers"},
+    "fivetran": {"www.fivetran.com"},
+    "flatironhealth": {"flatiron.com"},
+    "instacart": {"instacart.careers"},
+    "klaviyo": {"www.klaviyo.com"},
+    "lattice": {"lattice.com"},
+    "lyft": {"app.careerpuck.com"},
+    "movableink": {"movableink.com"},
+    "mongodb": {"www.mongodb.com"},
+    "motive": {"wearemotive.com"},
+    "nextdoor": {"about.nextdoor.com"},
+    "oscar": {"www.hioscar.com"},
+    "peloton": {"careers.onepeloton.com"},
+    "pinterest": {"www.pinterestcareers.com"},
+    "samsara": {"www.samsara.com"},
+    "seatgeek": {"seatgeek.com"},
+    "sofi": {"sofi.com"},
+    "squarespace": {"www.squarespace.com"},
+    "stashinvest": {"ats.comparably.com"},
+    "stripe": {"stripe.com"},
+    "sweetgreen": {"careers.sweetgreen.com"},
+    "taboola": {"www.taboola.com"},
+    "toast": {"careers.toasttab.com"},
+    "tripactions": {"navan.com"},
+    "thrivemarket": {"thrivemarketjobs.com"},
+    "twochairs": {"www.twochairs.com"},
+    "voxmedia": {"boards.greenhouse.io"},
+    "yotpo": {"www.yotpo.com"},
+    "zola": {"www.zola.com"},
+    "roblox": {"careers.roblox.com"},
+}
+
+
+def _official_posting_host(url: str, company: dict) -> bool:
+    """Keep Apply links on the company's configured careers surface.
+
+    ``is_actionable_url`` deliberately accepts numeric ``gh_jid`` links on
+    custom employer domains because the generic helper has no company context.
+    Once a feed is attached to a catalog entry, that context is the trust
+    boundary: the link must use an exact configured/allowlisted host or the
+    canonical host for that company's ATS. A few legacy official feeds still
+    return HTTP; exact-host matching preserves those links without trusting
+    arbitrary HTTP domains.
+    """
+    try:
+        parsed = urlparse(url)
+        hostname = (parsed.hostname or "").lower().rstrip(".")
+    except ValueError:
+        return False
+    if parsed.scheme not in ("http", "https") or not hostname:
+        return False
+
+    allowed = set()
+    for value in (company.get("careers_url"), company.get("workday_host")):
+        if not value:
+            continue
+        candidate = value if "://" in str(value) else f"https://{value}"
+        try:
+            host = (urlparse(candidate).hostname or "").lower().rstrip(".")
+        except ValueError:
+            host = ""
+        if host:
+            allowed.add(host)
+
+    ats = (company.get("ats") or "").lower()
+    canonical_hosts = {
+        "greenhouse": {"boards.greenhouse.io", "job-boards.greenhouse.io"},
+        "ashby": {"jobs.ashbyhq.com"},
+        "lever": {"jobs.lever.co"},
+    }.get(ats, set())
+    allowed.update(canonical_hosts)
+    if hostname in canonical_hosts:
+        # Shared ATS hosts must still point at this catalog entry's board. A
+        # valid job id on another company's board is not an official link for
+        # the current row.
+        slug = str(company.get("slug") or "").strip().casefold()
+        parts = [part.casefold() for part in parsed.path.split("/") if part]
+        if not slug or not parts or parts[0] != slug:
+            return False
+        if ats == "greenhouse":
+            return len(parts) > 1 and parts[1] == "jobs"
+        return True
+    if hostname in allowed:
+        return True
+    aliases = {
+        str(host).lower().rstrip(".")
+        for host in company.get("official_hosts", [])
+        if isinstance(host, str) and host.strip()
+    }
+    aliases.update(_EMPLOYER_HOST_ALIASES.get(str(company.get("slug", "")).lower(), set()))
+    if hostname in aliases:
+        return True
+    return False
+
 
 def discover_company(company: dict, *, session=None, ttl: int = 3600,
                      use_cache: bool = True, search_terms=None) -> tuple[list[Opportunity], dict]:
@@ -42,14 +155,18 @@ def discover_company(company: dict, *, session=None, ttl: int = 3600,
         kwargs["search_terms"] = search_terms
     opportunities, receipt = fetcher(company, **kwargs)
 
-    actionable, dropped = [], 0
+    actionable, dropped, untrusted = [], 0, 0
     for opp in opportunities:
-        if is_actionable_url(opp.url):
-            actionable.append(opp)
-        else:
+        if not is_actionable_url(opp.url):
             dropped += 1
+        elif not _official_posting_host(opp.url, company):
+            untrusted += 1
+        else:
+            actionable.append(opp)
     if dropped:
         receipt["dropped_non_actionable"] = dropped
+    if untrusted:
+        receipt["dropped_untrusted_url"] = untrusted
     receipt["count"] = len(actionable)
     return actionable, receipt
 

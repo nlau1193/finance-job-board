@@ -203,6 +203,11 @@ def load(path: Path = DEFAULT_PATH) -> dict:
             and ((allow_empty_url and item["url"].strip() == "")
                  or is_actionable_url(item["url"]))
             and ("tags" not in item or isinstance(item["tags"], list))
+            # Read/dismissed are browser state, not free-form JSON. Reject
+            # string values such as "false" instead of letting JavaScript
+            # treat them as truthy and hide a posting from the board.
+            and ("read" not in item or isinstance(item["read"], bool))
+            and ("dismissed" not in item or isinstance(item["dismissed"], bool))
             and ("application" not in item or (
                 isinstance(application, dict)
                 and all(isinstance(application.get(field), list)

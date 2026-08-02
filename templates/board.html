@@ -11,7 +11,8 @@
     --line:#e7ddcb; --line-soft:#f0e9da;
     --green:#2f7d4f; --green-soft:#e9f2ea; --green-ink:#1f5836;
     --clay:#bb4f2c; --clay-deep:#9c4123; --clay-soft:#f6e7df;
-    --amber:#9a6a16; --amber-soft:#f6ecd6;
+    /* 5.43:1 against --amber-soft for status, fit, and effort labels. */
+    --amber:#805714; --amber-soft:#f6ecd6;
     --radius:14px; --shadow:0 1px 0 rgba(33,31,26,.04), 0 10px 30px -20px rgba(33,31,26,.4);
     --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
     --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
@@ -327,6 +328,16 @@
     var number = Number(value);
     return isFinite(number) && number >= 0 ? Math.floor(number) : 0;
   }
+  function warningCountsOf(items) {
+    var counts = { cap: 0, security: 0, other: 0 };
+    (items || []).forEach(function (item) {
+      var kind = item && item.kind;
+      if (kind === "cap") counts.cap++;
+      else if (kind === "security") counts.security++;
+      else counts.other++;
+    });
+    return counts;
+  }
   function effortOf(appS) {
     var effort = appS && appS.effort;
     return effort === "quick" || effort === "light" || effort === "heavy" ? effort : "";
@@ -356,8 +367,11 @@
     else if (!sample && !stale) line='Live official careers data <span class="sep">·</span><strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">updated '+relTime(payload.generated_at)+'</span>';
     if (!sample && (warnings.length || errors.length)) {
       var health = [];
+      var warningCounts = warningCountsOf(warnings);
       if (errors.length) health.push(errors.length+" feeds unavailable");
-      if (warnings.length) health.push(warnings.length+" feeds capped");
+      if (warningCounts.cap) health.push(warningCounts.cap+" feeds capped");
+      if (warningCounts.security) health.push(warningCounts.security+" safety checks");
+      if (warningCounts.other) health.push(warningCounts.other+" refresh notes");
       line += ' <span class="sep">·</span><span class="muted">'+health.join(" · ")+' — run <code>./jobs doctor</code></span>';
     }
     var lane = '<span class="applylane">★ Applied today <span class="ring">'+appliedToday()+'</span></span>';
@@ -366,7 +380,13 @@
       if (sample) {
         boardNoteEl.innerHTML = '<strong>Demo board.</strong> These fictional roles are only here so you can explore the interface. Refresh before trusting a posting; demo roles never have a real application link.';
       } else {
-        var healthNote = (warnings.length || errors.length) ? ' <strong>Refresh note:</strong> '+(errors.length ? errors.length+' feeds were unavailable' : '')+(errors.length && warnings.length ? ' and ' : '')+(warnings.length ? warnings.length+' feeds were capped' : '')+'. Run <code>./jobs doctor</code> for details.' : '';
+        var noteParts = [];
+        var noteCounts = warningCountsOf(warnings);
+        if (errors.length) noteParts.push(errors.length+' feeds were unavailable');
+        if (noteCounts.cap) noteParts.push(noteCounts.cap+' feeds were capped');
+        if (noteCounts.security) noteParts.push(noteCounts.security+' safety checks held links for review');
+        if (noteCounts.other) noteParts.push(noteCounts.other+' refresh notes');
+        var healthNote = noteParts.length ? ' <strong>Refresh note:</strong> '+noteParts.join(' and ')+'. Run <code>./jobs doctor</code> for details.' : '';
         var compactNote = compacted ? ' <strong>Large board:</strong> descriptions and form questions are shortened so search stays responsive; open the official posting for the full text.' : '';
         boardNoteEl.innerHTML = '<strong>How this board works.</strong> Every live role comes from a company\'s official careers feed, with the full posting text when that feed provides it. The detail view adds fit, pay, freshness, and—only if you add a private connections CSV—people you know. <strong>Apply</strong> opens the exact posting.'+healthNote+compactNote+'<br><strong>Before you apply:</strong> confirm it\'s still open. Fit and connection matches are decision support, not gospel. This tool only <em>discovers</em>; it never applies, messages, logs into, or automates LinkedIn.';
       }
@@ -819,7 +839,7 @@
       if (r.postings != null) {
         var health = [];
         if (r.errors) health.push(r.errors + " feeds unavailable");
-        if (r.warnings) health.push(r.warnings + " feeds capped");
+        if (r.warnings) health.push(r.warnings + " refresh notes");
         rfSubmsg.textContent = "Found " + r.postings + " postings from " + (r.companies != null ? r.companies : "your") + " companies." +
           (health.length ? " " + health.join(" and ") + ". See the board note or ./jobs doctor." : "");
       } else {
