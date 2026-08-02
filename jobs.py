@@ -963,7 +963,19 @@ def cmd_serve(args) -> int:
                     self._send_json(404, {"error": "posting_not_found"})
                     return
                 store.set_dismissed(opp_id, dismissed=dismissed)
-                self._send_json(200, {"status": "ok", "id": opp_id, "dismissed": dismissed})
+                # Keep the rendered board in sync with the durable tombstone.
+                # The browser overlay hides the row immediately, but another
+                # browser (or a reopened static board) reads jobs.local.json;
+                # leaving its flag stale makes a dismissed role reappear there.
+                board_updated = store.set_flag(opp_id, dismissed=dismissed)
+                if board_updated:
+                    _build_board()
+                self._send_json(200, {
+                    "status": "ok",
+                    "id": opp_id,
+                    "dismissed": dismissed,
+                    "board_updated": board_updated,
+                })
                 return
             self._send_json(404, {"error": "not_found"})
 

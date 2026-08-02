@@ -238,3 +238,26 @@ behavior was added.
 - `./jobs serve --port -1 --no-open` now fails with a friendly argparse message,
   without a traceback; `python3 -m py_compile jobhunt/model.py jobhunt/ats/workday.py` and
   `git diff --check`: **clean**.
+
+## Current simplification receipt — 2026-08-02
+
+This bounded pass kept the public any-job board's primary path intact and fixed
+one reproduced state-consistency gap. A dismiss/undismiss API request now
+updates the stored row and rebuilds the static board immediately, so a second
+browser or a reopened board cannot keep showing the old dismissal state. The
+E2E smoke test now proves both directions through the API and local board data.
+
+### Fresh proof
+
+- `npm test`: **201 passed**, 75.13% total coverage (the 60% gate remains green).
+- `JOBBOARD_E2E_PORT=8911 JOBBOARD_E2E_ARTIFACT_DIR=/tmp/jobboard-simplify-e2e
+  npm run test:e2e`: **green**; desktop, mobile detail, loading, and
+  refresh-without-server artifacts were captured.
+- `git diff --check`: clean.
+
+The board remains category-neutral in product copy and configuration: users can
+filter any role and the official-source, exact-Apply-link, local-first,
+links-only LinkedIn boundaries remain unchanged. The GitHub slug is still
+`finance-job-board` because the public account has push but not admin access;
+the stale root deployment and any owner-only rename/transfer/history operation
+remain outside this source-only pass.

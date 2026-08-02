@@ -164,6 +164,25 @@ try {
   });
   assert.equal(unknownDismiss.status(), 404, "unknown dismiss must not create a tombstone");
 
+  // A served-board dismissal updates both the durable tombstone and the
+  // rendered board file. A second browser must not resurrect the role simply
+  // because it has a fresh localStorage overlay.
+  const dismiss = await page.request.post(`${baseURL}/api/dismiss`, {
+    data: { id: live.id, dismissed: true },
+  });
+  assert.equal(dismiss.status(), 200);
+  assert.equal((await dismiss.json()).board_updated, true);
+  const dismissedBoard = JSON.parse(readFileSync(path.join(runRoot, "data", "jobs.local.json"), "utf8"));
+  assert.equal(dismissedBoard.opportunities.find((item) => item.id === live.id)?.dismissed, true,
+    "server dismiss must update the local board row");
+  const undismiss = await page.request.post(`${baseURL}/api/dismiss`, {
+    data: { id: live.id, dismissed: false },
+  });
+  assert.equal(undismiss.status(), 200);
+  const restoredBoard = JSON.parse(readFileSync(path.join(runRoot, "data", "jobs.local.json"), "utf8"));
+  assert.equal(restoredBoard.opportunities.find((item) => item.id === live.id)?.dismissed, false,
+    "server undismiss must update the local board row");
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload({ waitUntil: "networkidle" });
   await page.locator("#q").fill("Product");
