@@ -553,11 +553,13 @@
     var mobile = window.matchMedia("(max-width:880px)").matches;
     if (jobs.length===0) {
       if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
+      listEl.setAttribute("aria-activedescendant", "");
       listEl.innerHTML='<div class="empty-state"><h2>No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div>';
       detailEl.innerHTML='<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div></div>'; countEl.textContent=""; return;
     }
     if (shown.length===0) {
       if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
+      listEl.setAttribute("aria-activedescendant", "");
       listEl.innerHTML='<div class="empty-state"><h2>Nothing matches</h2><p>No roles match your filters. Clear search, show read/dismissed, or run <code>./jobs refresh</code>.</p></div>';
       selectedId=null; renderDetail(); countEl.textContent="Showing 0 of "+jobs.length+" postings"; return;
     }

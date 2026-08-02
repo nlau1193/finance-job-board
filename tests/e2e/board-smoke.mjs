@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -13,7 +13,7 @@ cpSync(sourceRoot, runRoot, {
   filter: (source) => {
     const relative = path.relative(sourceRoot, source);
     if (!relative) return true;
-    if ([".git", ".venv", "node_modules", ".playwright-cli", "artifacts"].some((name) =>
+    if ([".git", ".venv", "node_modules", ".playwright-cli", "artifacts", ".env"].some((name) =>
       relative === name || relative.startsWith(`${name}${path.sep}`))) return false;
     if (relative === "config/search.local.json") return false;
     if (relative === "data" || relative === "data/jobs.sample.json") return true;
@@ -22,6 +22,7 @@ cpSync(sourceRoot, runRoot, {
   },
 });
 symlinkSync(path.join(sourceRoot, ".venv"), path.join(runRoot, ".venv"), "dir");
+assert.equal(existsSync(path.join(runRoot, ".env")), false, "E2E clone must never copy the local .env");
 const port = Number(process.env.JOBBOARD_E2E_PORT || 8897);
 const baseURL = `http://127.0.0.1:${port}`;
 const artifactDir = process.env.JOBBOARD_E2E_ARTIFACT_DIR || "/tmp/jobboard-e2e";
@@ -44,7 +45,12 @@ async function waitForServer() {
   throw new Error(`Job Hunt Board did not start at ${baseURL}`);
 }
 
-execFileSync("./jobs", ["setup"], { cwd: runRoot, stdio: "pipe" });
+try {
+  execFileSync("./jobs", ["setup"], { cwd: runRoot, stdio: "pipe" });
+} catch (error) {
+  rmSync(runRoot, { recursive: true, force: true });
+  throw error;
+}
 const server = spawn("./.venv/bin/python", ["jobs.py", "serve", "--port", String(port), "--no-open"], {
   cwd: runRoot,
   stdio: "ignore",
@@ -75,6 +81,9 @@ try {
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator(".sample-apply").count(), 1, "demo detail must explain that Apply is disabled");
   assert.equal(await page.locator("a.apply").count(), 0, "demo data must not expose a fake Apply link");
+  await page.locator("#q").fill("zzzz-no-such-role");
+  assert.equal(await page.locator("#list .row").count(), 0, "unmatched search should show an empty state");
+  assert.equal(await page.locator("#list").getAttribute("aria-activedescendant"), "", "empty listbox must not point at a removed row");
   await page.screenshot({ path: path.join(artifactDir, "desktop-sample.png"), fullPage: true });
 
   // Swap the fixture for one synthetic live posting. This keeps the public
