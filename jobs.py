@@ -25,6 +25,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+from jobhunt.model import ATS_PLATFORMS
+
 CONFIG = ROOT / "config"
 DATA = ROOT / "data"
 BOARD_FILE = DATA / "jobs.local.json"
@@ -163,6 +165,7 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
                     f"Resolved {location_cap} of {len(multi_loc)} multi-location "
                     "postings; the remainder kept their feed location"
                 ),
+                "kind": "cap",
             })
         workday_ats.resolve_locations(
             multi_loc, companies, use_cache=not no_cache, max_targets=location_cap
@@ -227,10 +230,14 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
 
     resolved = sum(1 for r in receipts if r.get("result") == "ok")
     errored = [r for r in receipts if r.get("result") != "ok"]
-    warnings = location_warnings + [
-        {"company": r.get("company"), "warning": r.get("warning")}
-        for r in receipts if r.get("warning")
-    ]
+    warnings = location_warnings[:]
+    for receipt in receipts:
+        if not receipt.get("warning"):
+            continue
+        warning = {"company": receipt.get("company"), "warning": receipt.get("warning")}
+        if receipt.get("warning_kind"):
+            warning["kind"] = receipt["warning_kind"]
+        warnings.append(warning)
     for r in receipts:
         malformed = int(r.get("dropped_malformed", 0) or 0)
         if malformed:
@@ -529,10 +536,23 @@ def cmd_doctor(args) -> int:
                 for e in errors[:15]:
                     say(f"       - {e.get('company')}: {e.get('result')} {e.get('error') or ''}".rstrip())
             warnings = (data.get("meta") or {}).get("warnings") or []
-            if warnings:
+            bounded = [item for item in warnings
+                       if isinstance(item, dict) and item.get("kind") == "cap"]
+            blocking_warnings = [
+                item for item in warnings
+                if not (isinstance(item, dict) and item.get("kind") == "cap")
+            ]
+            if blocking_warnings:
                 rc = 1
-                warn(f"{len(warnings)} refresh warnings:")
-                for item in warnings[:15]:
+                warn(f"{len(blocking_warnings)} refresh warnings:")
+                for item in blocking_warnings[:15]:
+                    if isinstance(item, dict):
+                        say(f"       - {item.get('company')}: {item.get('warning') or ''}".rstrip())
+                    else:
+                        say(f"       - {item}")
+            if bounded:
+                warn(f"{len(bounded)} bounded refresh advisories (no action needed):")
+                for item in bounded[:15]:
                     say(f"       - {item.get('company')}: {item.get('warning') or ''}".rstrip())
             recovery = (data.get("meta") or {}).get("recovery_warnings") or []
             if recovery:
@@ -649,6 +669,24 @@ def _load_company_catalog() -> list[dict]:
         if missing:
             invalid.append(f"entry {index} needs non-empty {', '.join(missing)}")
             continue
+        ats = company["ats"].strip().casefold()
+        if ats not in ATS_PLATFORMS:
+            invalid.append(
+                f"entry {index} ({company['name'].strip()}) has unsupported ATS "
+                f"'{company['ats'].strip()}' (expected one of {', '.join(ATS_PLATFORMS)})"
+            )
+            continue
+        if ats == "workday":
+            missing_workday = [
+                field for field in ("workday_host", "workday_tenant", "workday_site")
+                if not isinstance(company.get(field), str) or not company[field].strip()
+            ]
+            if missing_workday:
+                invalid.append(
+                    f"entry {index} ({company['name'].strip()}) needs non-empty "
+                    f"{', '.join(missing_workday)} for Workday"
+                )
+                continue
         identity = (company["ats"].strip().casefold(), company["slug"].strip().casefold())
         if identity in identities:
             invalid.append(

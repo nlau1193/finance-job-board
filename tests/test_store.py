@@ -1,5 +1,8 @@
 """Store tests: dedupe + read-state preservation across refreshes."""
 
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
 from jobhunt import store
 from jobhunt.model import Opportunity
 
@@ -274,3 +277,39 @@ def test_durable_dismissed_set(tmp_path):
     assert store.load_dismissed(path) == {"x", "y"}
     path.write_text("not json", encoding="utf-8")
     assert store.load_dismissed(path) == set()
+
+
+def test_concurrent_refresh_and_triage_preserve_all_local_state(tmp_path):
+    """A refresh replace cannot erase flags written by another local tab."""
+    path = tmp_path / "jobs.json"
+    dismissed_path = tmp_path / "dismissed.json"
+    posting = opp("1")
+    store.save([posting], path=path)
+
+    start = threading.Barrier(4)
+
+    def refresh_save():
+        start.wait()
+        replacement = opp("1", title="Updated title")
+        store.save([replacement], path=path)
+
+    def mark_read():
+        start.wait()
+        store.set_flag(posting.id, read=True, path=path)
+
+    def dismiss():
+        start.wait()
+        store.set_dismissed(posting.id, True, path=dismissed_path)
+        store.set_flag(posting.id, dismissed=True, path=path)
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = [pool.submit(worker) for worker in (refresh_save, mark_read, dismiss)]
+        start.wait()
+        for future in futures:
+            future.result()
+
+    row = store.load(path)["opportunities"][0]
+    assert row["title"] == "Updated title"
+    assert row["read"] is True
+    assert row["dismissed"] is True
+    assert store.load_dismissed(dismissed_path) == {posting.id}

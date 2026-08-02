@@ -232,6 +232,7 @@ def test_broad_search_uses_the_smaller_any_role_budget(monkeypatch):
     assert receipt["pages"] == workday._BROAD_MAX_PAGES
     assert receipt["page_budget"] == workday._BROAD_MAX_PAGES
     assert receipt["truncated"] is True
+    assert receipt["warning_kind"] == "cap"
     assert "broad search capped at 200 newest roles" in receipt["warning"]
 
 

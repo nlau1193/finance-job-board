@@ -102,6 +102,28 @@ def test_refresh_pipeline_surfaces_malformed_feed_rows_without_dropping_good_row
     }]
 
 
+def test_refresh_pipeline_marks_bounded_feed_caps_as_advisories(monkeypatch, tmp_path):
+    posting = _posting("3", "Financial Analyst")
+    _wire_pipeline(
+        monkeypatch,
+        tmp_path,
+        raw=[posting],
+        receipts=[{
+            "company": "Acme", "ats": "workday", "result": "ok", "count": 1,
+            "warning": "broad search capped at 200 newest roles across 1 term(s)",
+            "warning_kind": "cap",
+        }],
+    )
+
+    payload = jobs.refresh_board()
+
+    assert payload["meta"]["warnings"] == [{
+        "company": "Acme",
+        "warning": "broad search capped at 200 newest roles across 1 term(s)",
+        "kind": "cap",
+    }]
+
+
 def test_refresh_skips_workday_location_details_for_unrestricted_locations(monkeypatch, tmp_path):
     company = {
         "name": "Acme", "slug": "acme", "ats": "workday",

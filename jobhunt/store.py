@@ -21,6 +21,19 @@ DEFAULT_PATH = Path(__file__).resolve().parents[1] / "data" / "jobs.local.json"
 # if it drops off the ATS and reappears later with the same id.
 DISMISSED_PATH = Path(__file__).resolve().parents[1] / "data" / "dismissed.json"
 
+
+def _dismissed_path_for_board(path: Path) -> Path:
+    """Return the sibling tombstone file for a board path.
+
+    Production uses ``data/jobs.local.json`` and ``data/dismissed.json``. Keeping
+    custom board paths paired with a sibling file makes store tests and isolated
+    installs deterministic without ever consulting another checkout's state.
+    """
+    path = Path(path)
+    if path == DEFAULT_PATH:
+        return DISMISSED_PATH
+    return path.with_name("dismissed.json")
+
 # Fields that make a stored row renderable and safe to hand to Opportunity.
 # Local JSON is intentionally treated as recoverable user state: a cancelled
 # copy, hand edit, or older version must not take down `jobs board`.
@@ -29,9 +42,10 @@ _REQUIRED_OPPORTUNITY_FIELDS = (
 )
 
 # The board's local server handles requests on threads (and a background refresh
-# can save while a dismiss lands), so the dismissed set's read-modify-write must
-# be serialized or a near-simultaneous pair of dismisses loses one.
-_DISMISSED_LOCK = threading.Lock()
+# can save while a dismiss lands).  Keep every local state mutation under one
+# re-entrant lock: atomic replace prevents partial files, but without this lock a
+# later refresh save can still overwrite a read/dismiss flag written moments ago.
+_BOARD_STATE_LOCK = threading.RLock()
 
 
 def atomic_write_text(path: Path, text: str) -> None:
@@ -73,7 +87,7 @@ def load_dismissed(path: Path = DISMISSED_PATH) -> set:
 def set_dismissed(opp_id: str, dismissed: bool = True, path: Path = DISMISSED_PATH) -> bool:
     """Add (dismissed=True) or remove (False) an id from the durable dismissed set.
     Returns True if the set changed."""
-    with _DISMISSED_LOCK:
+    with _BOARD_STATE_LOCK:
         ids = load_dismissed(path)
         had = str(opp_id) in ids
         if dismissed:
@@ -267,30 +281,45 @@ def sort_for_board(opportunities: list[Opportunity]) -> list[Opportunity]:
 def save(opportunities: list[Opportunity], path: Path = DEFAULT_PATH,
          *, meta: dict | None = None, now: str | None = None) -> dict:
     now = now or utc_now()
-    ordered = sort_for_board(opportunities)
-    payload = {
-        "version": 1,
-        "generated_at": now,
-        "meta": meta or {},
-        "opportunities": [o.to_dict() for o in ordered],
-    }
-    atomic_write_text(path, json.dumps(payload, indent=2) + "\n")
-    return payload
+    with _BOARD_STATE_LOCK:
+        # Refresh builds its merged list before saving. Re-read the just-written
+        # local state while holding the same lock as set_flag so a concurrent
+        # read/dismiss cannot be lost by this replacement write.
+        prior = _existing_state(path)
+        durable_dismissed = load_dismissed(path=_dismissed_path_for_board(path))
+        for opportunity in opportunities:
+            old = prior.get(opportunity.id)
+            if old:
+                opportunity.read = bool(old.get("read", opportunity.read))
+                opportunity.dismissed = bool(old.get("dismissed", opportunity.dismissed))
+            if opportunity.id in durable_dismissed:
+                opportunity.dismissed = True
+
+        ordered = sort_for_board(opportunities)
+        payload = {
+            "version": 1,
+            "generated_at": now,
+            "meta": meta or {},
+            "opportunities": [o.to_dict() for o in ordered],
+        }
+        atomic_write_text(path, json.dumps(payload, indent=2) + "\n")
+        return payload
 
 
 def set_flag(opp_id: str, *, read: bool | None = None, dismissed: bool | None = None,
              path: Path = DEFAULT_PATH) -> bool:
     """Mutate read/dismissed for one opportunity. Returns True if found."""
-    data = load(path)
-    found = False
-    for o in data.get("opportunities", []):
-        if o.get("id") == opp_id:
-            if read is not None:
-                o["read"] = read
-            if dismissed is not None:
-                o["dismissed"] = dismissed
-            found = True
-            break
-    if found:
-        atomic_write_text(path, json.dumps(data, indent=2) + "\n")
-    return found
+    with _BOARD_STATE_LOCK:
+        data = load(path)
+        found = False
+        for o in data.get("opportunities", []):
+            if o.get("id") == opp_id:
+                if read is not None:
+                    o["read"] = read
+                if dismissed is not None:
+                    o["dismissed"] = dismissed
+                found = True
+                break
+        if found:
+            atomic_write_text(path, json.dumps(data, indent=2) + "\n")
+        return found

@@ -135,6 +135,8 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
     if warnings:
         receipt["warning"] = "; ".join(warnings)
     if truncated:
+        # This is an intentional bounded-budget advisory, not a feed failure.
+        receipt["warning_kind"] = "cap"
         receipt["truncated"] = True
     if malformed:
         receipt["dropped_malformed"] = malformed

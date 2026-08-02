@@ -255,6 +255,37 @@ def test_company_catalog_rejects_duplicate_identity(tmp_path, monkeypatch):
         raise AssertionError("duplicate ATS/slug identity should fail closed")
 
 
+def test_company_catalog_rejects_unsupported_ats(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    (tmp_path / "companies.json").write_text(json.dumps({"companies": [
+        {"name": "Mystery Co", "slug": "mystery", "ats": "unknown"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+
+    try:
+        jobs._load_company_catalog()
+    except ValueError as exc:
+        assert "entry 1 (Mystery Co) has unsupported ATS 'unknown'" in str(exc)
+    else:
+        raise AssertionError("unsupported ATS should fail at catalog validation")
+
+
+def test_company_catalog_rejects_incomplete_workday_endpoint(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    (tmp_path / "companies.json").write_text(json.dumps({"companies": [
+        {"name": "Acme", "slug": "acme", "ats": "workday",
+         "workday_tenant": "acme", "workday_site": "External"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+
+    try:
+        jobs._load_company_catalog()
+    except ValueError as exc:
+        assert "entry 1 (Acme) needs non-empty workday_host for Workday" in str(exc)
+    else:
+        raise AssertionError("incomplete Workday endpoint should fail at catalog validation")
+
+
 def test_doctor_marks_partial_refresh_as_needing_attention(tmp_path, monkeypatch):
     _isolate_search(tmp_path, monkeypatch)
     board = tmp_path / "jobs.local.json"
@@ -272,6 +303,29 @@ def test_doctor_marks_partial_refresh_as_needing_attention(tmp_path, monkeypatch
     ]}), encoding="utf-8")
 
     assert jobs.cmd_doctor(types.SimpleNamespace()) == 1
+
+
+def test_doctor_keeps_bounded_cap_advisory_green(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    board = tmp_path / "jobs.local.json"
+    board.write_text(json.dumps({
+        "version": 1,
+        "generated_at": "2026-08-02T00:00:00Z",
+        "meta": {"warnings": [{
+            "company": "Workday Co",
+            "warning": "broad search capped at 200 newest roles across 1 term(s)",
+            "kind": "cap",
+        }]},
+        "opportunities": [],
+    }), encoding="utf-8")
+    monkeypatch.setattr(jobs, "BOARD_FILE", board)
+    monkeypatch.setattr(jobs, "ROOT", tmp_path)
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+    (tmp_path / "companies.json").write_text(json.dumps({"companies": [
+        {"name": "Example", "slug": "example", "ats": "ashby"},
+    ]}), encoding="utf-8")
+
+    assert jobs.cmd_doctor(types.SimpleNamespace()) == 0
 
 
 def test_configure_rejects_unknown_company_without_writing(tmp_path, monkeypatch):
