@@ -43,6 +43,7 @@
   .toggle { display:inline-flex; align-items:center; gap:8px; user-select:none; }
   .toggle input { width:16px; height:16px; accent-color:var(--green); margin:0; }
   .count { color:var(--ink-soft); font-size:13px; margin:2px 0 14px; }
+  .state-notice { margin:0 0 14px; padding:9px 12px; border:1px solid #e8d6a8; border-radius:10px; background:var(--amber-soft); color:var(--amber); font-size:13px; }
 
   .layout { display:grid; grid-template-columns:minmax(300px,340px) 1fr; gap:18px; align-items:start; }
   .list { display:flex; flex-direction:column; gap:10px; max-height:calc(100vh - 40px); overflow:auto; padding-right:4px; }
@@ -214,6 +215,7 @@
     <button type="button" class="refresh-btn" id="refresh-btn" aria-label="Refresh board with today's live postings"><span class="ricon" aria-hidden="true">&#8635;</span> Refresh</button>
   </div>
   <p class="count" id="count"></p>
+  <p class="state-notice" id="state-notice" role="status" aria-live="polite" hidden></p>
 
   <main class="layout">
     <div class="list" id="list" role="listbox" tabindex="0" aria-label="Job postings" aria-activedescendant=""></div>
@@ -292,18 +294,26 @@
   // When served (not opened as a file://), persist a dismiss to the server so the
   // role is excluded from every future refresh — not just hidden in this browser.
   function persistDismiss(id, dismissed) {
-    if (location.protocol === "file:") return;
-    try {
-      fetch("/api/dismiss", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: id, dismissed: dismissed }) }).catch(function(){});
-    } catch (e) {}
+    if (location.protocol === "file:") return Promise.resolve();
+    return fetch("/api/dismiss", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id, dismissed: dismissed }) }).then(function (response) {
+        if (!response.ok) throw new Error("dismiss_http_" + response.status);
+      });
   }
   function appliedToday() { var t = todayKey(); return Object.keys(overlay).filter(function (k){ return overlay[k] && overlay[k].applied === t; }).length; }
 
   var $ = function (id) { return document.getElementById(id); };
-  var listEl = $("list"), detailEl = $("detail"), countEl = $("count"), statusEl = $("status");
+  var listEl = $("list"), detailEl = $("detail"), countEl = $("count"), statusEl = $("status"), stateNoticeEl = $("state-notice");
   var eyebrowEl = $("eyebrow"), boardNoteEl = $("board-note");
   var q = $("q"), sortSel = $("sort"), companyFilter = $("company-filter"), hideRead = $("hide-read"), hideDismissed = $("hide-dismissed");
+  var stateNoticeTimer = null;
+  function showStateNotice(message) {
+    if (!stateNoticeEl) return;
+    stateNoticeEl.textContent = message;
+    stateNoticeEl.hidden = false;
+    if (stateNoticeTimer) clearTimeout(stateNoticeTimer);
+    stateNoticeTimer = setTimeout(function () { stateNoticeEl.hidden = true; }, 6000);
+  }
 
   function relTime(iso) { if (!iso) return ""; var t = new Date(iso).getTime(); if (isNaN(t)) return ""; var m=Math.round((Date.now()-t)/60000); if (m<1) return "just now"; if (m<60) return m+" min ago"; var h=Math.round(m/60); if (h<24) return h+(h===1?" hour ago":" hours ago"); var d=Math.round(h/24); return d+(d===1?" day ago":" days ago"); }
   function ageDays(iso) { var t=new Date(iso).getTime(); return isNaN(t)?0:(Date.now()-t)/86400000; }
@@ -609,7 +619,17 @@
     if (g) { var id=g.getAttribute("data-id"), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return; var st=stateOf(j); var act=g.getAttribute("data-act");
       if (act==="read") setState(id,{read:!st.read});
       else if (act==="applied") setState(id,{applied: st.applied?null:todayKey(), read:true});
-      else { var willDismiss=!st.dismissed; setState(id,{dismissed:willDismiss, read:willDismiss?true:st.read}); persistDismiss(id, willDismiss); } return; }
+      else {
+        var willDismiss=!st.dismissed;
+        var previousState = { dismissed: st.dismissed, read: st.read };
+        setState(id,{dismissed:willDismiss, read:willDismiss?true:st.read});
+        persistDismiss(id, willDismiss).catch(function () {
+          setState(id, previousState);
+          showStateNotice("Could not save that change. The posting is still on your board — try again.");
+        });
+      }
+      return;
+    }
     var a = e.target.closest("a.apply"); if (a) setState(a.getAttribute("data-apply"), {read:true});
   });
   async function draftReferral(j) {

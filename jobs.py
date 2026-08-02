@@ -86,7 +86,7 @@ def cmd_setup(args) -> int:
     ok(f"Built board: {BOARD_HTML}")
 
     head("Next steps")
-    say("  1.  ./jobs configure      # optional: choose titles, locations, and fit")
+    say("  1.  ./jobs configure      # optional: choose titles, locations, companies, and age")
     say("  2.  ./jobs start          # open the board; use its Refresh button")
     say("")
     return 0 if deps_ok else 1
@@ -524,16 +524,19 @@ def cmd_doctor(args) -> int:
                 say(f"     Application forms: {extractable}/{n} previewable, {with_prompts} with free-form prompts")
             errors = (data.get("meta") or {}).get("errors") or []
             if errors:
+                rc = 1
                 warn(f"{len(errors)} companies failed last refresh:")
                 for e in errors[:15]:
                     say(f"       - {e.get('company')}: {e.get('result')} {e.get('error') or ''}".rstrip())
             warnings = (data.get("meta") or {}).get("warnings") or []
             if warnings:
+                rc = 1
                 warn(f"{len(warnings)} refresh warnings:")
                 for item in warnings[:15]:
                     say(f"       - {item.get('company')}: {item.get('warning') or ''}".rstrip())
             recovery = (data.get("meta") or {}).get("recovery_warnings") or []
             if recovery:
+                rc = 1
                 warn("Local board recovery:")
                 for item in recovery[:15]:
                     say(f"       - {item}")
@@ -633,6 +636,8 @@ def _load_company_catalog() -> list[dict]:
         raise ValueError("companies.json must contain a non-empty companies[] list")
 
     invalid = []
+    identities = {}
+    names = {}
     for index, company in enumerate(companies, start=1):
         if not isinstance(company, dict):
             invalid.append(f"entry {index} must be an object")
@@ -643,6 +648,20 @@ def _load_company_catalog() -> list[dict]:
         ]
         if missing:
             invalid.append(f"entry {index} needs non-empty {', '.join(missing)}")
+            continue
+        identity = (company["ats"].strip().casefold(), company["slug"].strip().casefold())
+        if identity in identities:
+            invalid.append(
+                f"entry {index} duplicates {identities[identity]} for ats/slug "
+                f"{company['ats']}/{company['slug']}"
+            )
+        else:
+            identities[identity] = f"entry {index}"
+        name_key = company["name"].strip().casefold()
+        if name_key in names:
+            invalid.append(f"entry {index} duplicates {names[name_key]} for company name {company['name']}")
+        else:
+            names[name_key] = f"entry {index}"
     if invalid:
         raise ValueError("companies.json has invalid entries: " + "; ".join(invalid[:5]))
     return companies
@@ -884,7 +903,6 @@ def cmd_configure(args) -> int:
         ).strip()
         remote = ask(f"Include remote roles? [{'yes' if config.get('remote_ok', True) else 'no'}]: ").strip().lower()
         age = ask(f"Maximum posting age in days [{config.get('max_age_days', 30)}]: ").strip()
-        bio = ask(f"Short professional summary [{config.get('referral_bio', '')}]: ").strip()
         if titles:
             config["title_keywords"] = [] if titles.lower() in {"all", "any"} else _csv_values(titles)
         if locations:
@@ -911,9 +929,10 @@ def cmd_configure(args) -> int:
                 err("Maximum age must be zero or greater")
                 return 1
             config["max_age_days"] = parsed_age
-        if bio:
-            config["referral_bio"] = bio
-        updates = any((titles, locations, companies, remote, age, bio))
+        # Referral copy can contain private personal context. Keep it out of
+        # the common five-question setup; configure it explicitly with
+        # ``./jobs configure --bio ...`` when the optional warm path is wanted.
+        updates = any((titles, locations, companies, remote, age))
 
     if updates:
         _write_search_config(config)
@@ -928,6 +947,7 @@ def cmd_configure(args) -> int:
     say(f"  Companies:  {', '.join(config.get('companies', [])) or 'all configured companies'}")
     say(f"  Remote:     {'included' if config.get('remote_ok', True) else 'excluded'}")
     say(f"  Max age:    {config.get('max_age_days', 30)} days")
+    say(f"  Referral:   {'configured locally (optional)' if config.get('referral_bio') else 'not configured (optional)'}")
     say("\nRun `./jobs start`, then use Refresh in the board.")
     return 0
 

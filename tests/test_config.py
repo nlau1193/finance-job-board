@@ -105,7 +105,6 @@ def test_bare_configure_runs_plain_english_setup(tmp_path, monkeypatch):
         "Ramp, Stripe",
         "no",
         "21",
-        "I build operating forecasts",
     ])
     args = _config_args(input_fn=lambda _prompt: next(answers))
 
@@ -117,7 +116,9 @@ def test_bare_configure_runs_plain_english_setup(tmp_path, monkeypatch):
     assert saved["companies"] == ["Ramp", "Stripe"]
     assert saved["remote_ok"] is False
     assert saved["max_age_days"] == 21
-    assert saved["referral_bio"] == "I build operating forecasts"
+    # The common setup does not collect private referral copy. Keep the
+    # optional value already present, and require --bio for an explicit change.
+    assert saved["referral_bio"] == "I work in finance"
 
 
 def test_configure_rejects_negative_age(tmp_path, monkeypatch):
@@ -236,6 +237,41 @@ def test_company_catalog_rejects_malformed_entry(tmp_path, monkeypatch):
         assert "entry 1 must be an object" in str(exc)
     else:
         raise AssertionError("malformed company catalog should fail closed")
+
+
+def test_company_catalog_rejects_duplicate_identity(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    (tmp_path / "companies.json").write_text(json.dumps({"companies": [
+        {"name": "Ramp", "slug": "ramp", "ats": "ashby"},
+        {"name": "Ramp copy", "slug": "ramp", "ats": "ashby"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+
+    try:
+        jobs._load_company_catalog()
+    except ValueError as exc:
+        assert "duplicates entry 1" in str(exc)
+    else:
+        raise AssertionError("duplicate ATS/slug identity should fail closed")
+
+
+def test_doctor_marks_partial_refresh_as_needing_attention(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    board = tmp_path / "jobs.local.json"
+    board.write_text(json.dumps({
+        "version": 1,
+        "generated_at": "2026-08-02T00:00:00Z",
+        "meta": {"errors": [{"company": "Example", "error": "timeout"}]},
+        "opportunities": [],
+    }), encoding="utf-8")
+    monkeypatch.setattr(jobs, "BOARD_FILE", board)
+    monkeypatch.setattr(jobs, "ROOT", tmp_path)
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+    (tmp_path / "companies.json").write_text(json.dumps({"companies": [
+        {"name": "Example", "slug": "example", "ats": "ashby"},
+    ]}), encoding="utf-8")
+
+    assert jobs.cmd_doctor(types.SimpleNamespace()) == 1
 
 
 def test_configure_rejects_unknown_company_without_writing(tmp_path, monkeypatch):

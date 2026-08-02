@@ -88,6 +88,9 @@ replace the demo with the roles and locations in your private search file.
 - Edit `config/search.local.json` for every search and fit setting, including an
   optional company shortlist. This private file is created from
   `config/search.example.json` and ignored by Git.
+- The optional referral summary is deliberately not asked during the common
+  setup. Add it only when you want the warm path: `./jobs configure --bio
+  "A short first-person summary"`.
 - Leave `title_keywords` empty to include every kind of job; use
   `title_exclude` for titles you never want to see.
 - If you edit the JSON by hand, keep titles, locations, and exclusions as lists
@@ -105,7 +108,9 @@ replace the demo with the roles and locations in your private search file.
 Personal preferences, board state, and connections are ignored by Git. The
 committed demo data is fictional. To hand someone your exact setup, copy only
 `config/search.local.json`; add `data/connections.csv` only if they explicitly
-want that private information too.
+want that private information too. Treat `data/jobs.local.json` and the built
+`artifacts/board/index.html` as private: a configured referral summary and
+connection matches may appear in them.
 
 ## Privacy
 
@@ -136,7 +141,9 @@ calling a live ATS. See `CONTRIBUTING.md` for the release floor and project map.
 ## Security
 
 Do not commit `config/search.local.json`, `data/jobs.local.json`,
-`data/connections.csv`, or generated boards. Report a vulnerability using
+`data/connections.csv`, or generated boards. Generated boards can contain
+configured referral context, so share screenshots only after checking them.
+Report a vulnerability using
 `SECURITY.md`.
 
 ## License

@@ -164,6 +164,16 @@ try {
   });
   assert.equal(unknownDismiss.status(), 404, "unknown dismiss must not create a tombstone");
 
+  await page.route(`${baseURL}/api/dismiss`, async (route) => {
+    await route.fulfill({ status: 503, contentType: "text/plain", body: "simulated save outage" });
+  });
+  await page.locator('[data-act="dismiss"]').click();
+  await page.locator("#state-notice").waitFor({ state: "visible" });
+  assert.match(await page.locator("#state-notice").textContent(), /could not save/i);
+  assert.equal(await page.locator('[data-act="dismiss"]').textContent(), "Dismiss",
+    "failed dismiss must roll back the optimistic overlay");
+  await page.unroute(`${baseURL}/api/dismiss`);
+
   // A served-board dismissal updates both the durable tombstone and the
   // rendered board file. A second browser must not resurrect the role simply
   // because it has a fresh localStorage overlay.
