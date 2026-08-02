@@ -323,9 +323,17 @@
     var bucket = fit && fit.bucket;
     return bucket === "APPLY" || bucket === "STRETCH" || bucket === "SKIP" ? bucket : "";
   }
+  function countOf(value) {
+    var number = Number(value);
+    return isFinite(number) && number >= 0 ? Math.floor(number) : 0;
+  }
+  function effortOf(appS) {
+    var effort = appS && appS.effort;
+    return effort === "quick" || effort === "light" || effort === "heavy" ? effort : "";
+  }
 
   function renderStatus() {
-    var companies = meta.companies_with_postings != null ? meta.companies_with_postings : new Set(jobs.map(function (j){return j.company;})).size;
+    var companies = meta.companies_with_postings != null ? countOf(meta.companies_with_postings) : new Set(jobs.map(function (j){return j.company;})).size;
     var sample = meta.sample === true;
     var compacted = meta.board_compacted === true;
     var warnings = Array.isArray(meta.warnings) ? meta.warnings : [];
@@ -386,16 +394,17 @@
     if (j.location) bits.push('<span'+(j.remote?' class="remote"':'')+'>'+esc(j.location)+'</span>');
     if (j.compensation) bits.push('<span class="pay">'+esc(j.compensation)+'</span>');
     if (fr.badge) bits.push('<span'+(fr.hot?' class="remote"':'')+'>'+esc(fr.badge)+'</span>');
-    if (warm && warm.count) bits.push('<span class="warmdot">★ '+warm.count+' you know</span>');
+    var warmCount = countOf(warm && warm.count);
+    if (warmCount) bits.push('<span class="warmdot">★ '+warmCount+' you know</span>');
     if (st.applied) bits.push('<span class="applied-tag">✓ APPLIED</span>');
     var fitBucket = fitBucketOf(fit);
     var pill = fitBucket ? '<span class="fitpill fit-'+esc(fitBucket)+'">'+esc(fitBucket)+'</span>' : '';
-    var appS = e.application || {}, effPill = '';
-    if (appS.effort === 'quick') {
+    var appS = e.application || {}, effort = effortOf(appS), effPill = '';
+    if (effort === 'quick') {
       effPill = '<span class="effpill eff-quick" title="Resume only — no written questions">⚡ Quick</span>';
-    } else if (appS.effort) {
-      var nq = appS.prompt_count || 0;
-      effPill = '<span class="effpill eff-'+appS.effort+'" title="'+nq+' written question'+(nq===1?'':'s')+' to prep before applying">✍ '+nq+' Q</span>';
+    } else if (effort) {
+      var nq = countOf(appS.prompt_count);
+      effPill = '<span class="effpill eff-'+effort+'" title="'+nq+' written question'+(nq===1?'':'s')+' to prep before applying">✍ '+nq+' Q</span>';
     }
     return '<button id="job-row-'+esc(j.id)+'" class="'+cls+'" role="option" tabindex="-1" aria-selected="'+(j.id===selectedId)+'" data-id="'+esc(j.id)+'">'+
       '<div class="row-top"><span class="row-company">'+esc(j.company)+'</span><span class="row-pills">'+effPill+pill+'</span></div>'+
@@ -411,9 +420,10 @@
     var liLinks = '';
     if (li.connections) liLinks += '<a class="warm-cta" href="'+esc(li.connections)+'" target="_blank" rel="noopener noreferrer">🔎 Your connections at '+esc(j.company)+' →</a>';
     if (li.recruiters) liLinks += '<a class="warm-cta" href="'+esc(li.recruiters)+'" target="_blank" rel="noopener noreferrer">🔎 Recruiters at '+esc(j.company)+' →</a>';
-    if (warm && warm.count) {
+    var warmCount = countOf(warm && warm.count);
+    if (warm && warmCount) {
       var ppl = (warm.people||[]).map(function (p){ return '<div class="warmperson"><b>'+esc(p.name)+'</b>'+(p.position?' <span>· '+esc(p.position)+'</span>':'')+'</div>'; }).join("");
-      cards.push('<div class="ecard warm"><h4>People you know</h4><div style="font-weight:600;margin-bottom:6px">'+warm.count+' '+(warm.count===1?'match':'matches')+' at '+esc(j.company)+'</div>'+ppl+'<button class="warm-cta" data-warm="'+esc(j.id)+'">Draft a referral ask →</button>'+liLinks+'</div>');
+      cards.push('<div class="ecard warm"><h4>People you know</h4><div style="font-weight:600;margin-bottom:6px">'+warmCount+' '+(warmCount===1?'match':'matches')+' at '+esc(j.company)+'</div>'+ppl+'<button class="warm-cta" data-warm="'+esc(j.id)+'">Draft a referral ask →</button>'+liLinks+'</div>');
     } else if (meta.connections_loaded) {
       cards.push('<div class="ecard warm"><h4>People you know</h4><div class="estale" style="margin-bottom:6px">No match in your private connections file.</div>'+liLinks+'</div>');
     }
@@ -427,13 +437,13 @@
       cards.push('<div class="ecard"><h4>Fit</h4><span class="fitbig" style="'+col+'">'+esc(fitBucket)+(fitBucket==='APPLY'?' NOW':'')+'</span><div>'+why+flags+miss+'</div><div class="estale" style="margin-top:6px">APPLY = matches your search · STRETCH = senior or missing one · SKIP = below your level</div></div>');
     }
     // Application form preview — what applying actually asks for
-    var app = j.application || {}, appS = e.application || {};
-    if (appS.effort) {
-      var npr = appS.prompt_count || 0;
-      var effLabel = appS.effort==='quick' ? '🟢 Quick apply — resume only'
-                   : (appS.effort==='heavy'?'🔴 ':'🟡 ')+npr+' question'+(npr===1?'':'s')+' to prep';
-      var effCol = appS.effort==='quick' ? 'background:var(--green-soft);color:var(--green-ink)'
-                 : appS.effort==='light' ? 'background:var(--amber-soft);color:var(--amber)'
+    var app = j.application || {}, appS = e.application || {}, effort = effortOf(appS);
+    if (effort) {
+      var npr = countOf(appS.prompt_count);
+      var effLabel = effort==='quick' ? '🟢 Quick apply — resume only'
+                   : (effort==='heavy'?'🔴 ':'🟡 ')+npr+' question'+(npr===1?'':'s')+' to prep';
+      var effCol = effort==='quick' ? 'background:var(--green-soft);color:var(--green-ink)'
+                 : effort==='light' ? 'background:var(--amber-soft);color:var(--amber)'
                  : 'background:#f3e3df;color:var(--clay-deep)';
       var gflags = (appS.flags||[]).map(function (f){ return '<span class="echip flag">'+esc(f)+'</span>'; }).join("");
       var qs = (app.prompts||[]).map(function (p){
@@ -448,9 +458,11 @@
     // Comp
     if (j.compensation) cards.push('<div class="ecard"><h4>Pay</h4><div class="emoney">'+esc(j.compensation)+'</div><div class="estale">from the posting</div></div>');
     // Momentum
-    if (mom.matching_roles) {
-      var delta = (mom.matching_delta!=null && mom.matching_delta>0) ? ' <span style="color:var(--green-ink);font-weight:600">+'+mom.matching_delta+' this week</span>' : '';
-      cards.push('<div class="ecard"><h4>Company momentum</h4><div class="efact"><span class="lbl">Open roles:</span> '+mom.total_roles+'</div><div class="efact"><span class="lbl">Matching your search:</span> '+mom.matching_roles+delta+'</div></div>');
+    var matchingRoles = countOf(mom.matching_roles);
+    if (matchingRoles) {
+      var matchingDelta = countOf(mom.matching_delta);
+      var delta = matchingDelta > 0 ? ' <span style="color:var(--green-ink);font-weight:600">+'+matchingDelta+' this week</span>' : '';
+      cards.push('<div class="ecard"><h4>Company momentum</h4><div class="efact"><span class="lbl">Open roles:</span> '+countOf(mom.total_roles)+'</div><div class="efact"><span class="lbl">Matching your search:</span> '+matchingRoles+delta+'</div></div>');
     }
     return cards.length ? '<div class="rail">'+cards.join("")+'</div>' : '<div class="rail"></div>';
   }

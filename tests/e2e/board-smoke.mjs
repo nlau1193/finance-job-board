@@ -108,6 +108,18 @@ try {
         red_flags: [],
         missing: [],
       },
+      warm: {
+        count: '<img src=x onerror="window.__warm=1">',
+        people: [],
+      },
+      application: {
+        effort: '<img src=x onerror="window.__app=1">',
+        prompt_count: '<img src=x onerror="window.__app2=1">',
+      },
+      momentum: {
+        total_roles: '<svg onload="window.__mom=2">',
+        matching_roles: '<img src=x onerror="window.__mom=1">',
+      },
     },
   };
   writeFileSync(path.join(runRoot, "data", "jobs.local.json"), JSON.stringify({
@@ -126,8 +138,14 @@ try {
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
   assert.equal(await page.evaluate(() => window.__fit || null), null,
     "malformed local fit labels must not execute as HTML");
-  assert.equal(await page.locator("#detail img").count(), 0,
-    "malformed local fit labels must not create DOM nodes");
+  assert.equal(await page.evaluate(() => window.__warm || null), null,
+    "malformed local warm counts must not execute as HTML");
+  assert.equal(await page.evaluate(() => window.__mom || null), null,
+    "malformed local momentum counts must not execute as HTML");
+  assert.equal(await page.evaluate(() => window.__app2 || null), null,
+    "malformed local application counts must not execute as HTML");
+  assert.equal(await page.locator("#detail img, #detail svg").count(), 0,
+    "malformed local numeric state must not create DOM nodes");
 
   // Existing installs used one global key before profile-scoped state shipped.
   // A first load must migrate that triage once, without leaking it to another
