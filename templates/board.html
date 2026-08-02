@@ -258,6 +258,7 @@
   var meta = payload.meta || {};
   var PROFILE_KEY = String(meta.search_profile_key || (meta.sample ? "demo" : "legacy"));
   var LS_KEY = "job-hunt-board-state-v2:" + PROFILE_KEY;
+  // Keep the pre-rename key as a one-way migration for existing installs.
   var LEGACY_LS_KEY = "finance-job-board-state-v1";
   var selectedId = null, detailTrigger = null;
   var visibleLimit = 100, PAGE_SIZE = 100;

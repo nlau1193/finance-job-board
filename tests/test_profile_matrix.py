@@ -2,7 +2,7 @@
 
 These are deliberately synthetic and contain no resume, account, or private
 connection data. They prove that a fresh install can be configured for very
-different kinds of work without a hidden finance-only filter.
+different kinds of work without a hidden category filter.
 """
 
 import pytest
