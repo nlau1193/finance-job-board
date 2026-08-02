@@ -319,6 +319,10 @@
   function ageDays(iso) { var t=new Date(iso).getTime(); return isNaN(t)?0:(Date.now()-t)/86400000; }
   function ts(iso) { var t = iso ? new Date(iso).getTime() : NaN; return isNaN(t) ? 0 : t; }
   function esc(s) { return String(s==null?"":s).replace(/[&<>"']/g, function (c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; }); }
+  function fitBucketOf(fit) {
+    var bucket = fit && fit.bucket;
+    return bucket === "APPLY" || bucket === "STRETCH" || bucket === "SKIP" ? bucket : "";
+  }
 
   function renderStatus() {
     var companies = meta.companies_with_postings != null ? meta.companies_with_postings : new Set(jobs.map(function (j){return j.company;})).size;
@@ -384,7 +388,8 @@
     if (fr.badge) bits.push('<span'+(fr.hot?' class="remote"':'')+'>'+esc(fr.badge)+'</span>');
     if (warm && warm.count) bits.push('<span class="warmdot">★ '+warm.count+' you know</span>');
     if (st.applied) bits.push('<span class="applied-tag">✓ APPLIED</span>');
-    var pill = fit.bucket ? '<span class="fitpill fit-'+fit.bucket+'">'+fit.bucket+'</span>' : '';
+    var fitBucket = fitBucketOf(fit);
+    var pill = fitBucket ? '<span class="fitpill fit-'+esc(fitBucket)+'">'+esc(fitBucket)+'</span>' : '';
     var appS = e.application || {}, effPill = '';
     if (appS.effort === 'quick') {
       effPill = '<span class="effpill eff-quick" title="Resume only — no written questions">⚡ Quick</span>';
@@ -413,12 +418,13 @@
       cards.push('<div class="ecard warm"><h4>People you know</h4><div class="estale" style="margin-bottom:6px">No match in your private connections file.</div>'+liLinks+'</div>');
     }
     // Fit & triage
-    if (fit.bucket) {
-      var col = fit.bucket==='APPLY'?'background:var(--green-soft);color:var(--green-ink)':fit.bucket==='STRETCH'?'background:var(--amber-soft);color:var(--amber)':'background:#efe9dd;color:var(--ink-soft)';
+    var fitBucket = fitBucketOf(fit);
+    if (fitBucket) {
+      var col = fitBucket==='APPLY'?'background:var(--green-soft);color:var(--green-ink)':fitBucket==='STRETCH'?'background:var(--amber-soft);color:var(--amber)':'background:#efe9dd;color:var(--ink-soft)';
       var why = (fit.why||[]).map(function (w){ return '<span class="echip">'+esc(w)+'</span>'; }).join("");
       var flags = (fit.red_flags||[]).map(function (f){ return '<span class="echip flag">'+esc(f)+'</span>'; }).join("");
       var miss = (fit.missing||[]).map(function (m){ return '<span class="echip miss">mentions '+esc(m)+'</span>'; }).join("");
-      cards.push('<div class="ecard"><h4>Fit</h4><span class="fitbig" style="'+col+'">'+fit.bucket+(fit.bucket==='APPLY'?' NOW':'')+'</span><div>'+why+flags+miss+'</div><div class="estale" style="margin-top:6px">APPLY = matches your search · STRETCH = senior or missing one · SKIP = below your level</div></div>');
+      cards.push('<div class="ecard"><h4>Fit</h4><span class="fitbig" style="'+col+'">'+esc(fitBucket)+(fitBucket==='APPLY'?' NOW':'')+'</span><div>'+why+flags+miss+'</div><div class="estale" style="margin-top:6px">APPLY = matches your search · STRETCH = senior or missing one · SKIP = below your level</div></div>');
     }
     // Application form preview — what applying actually asks for
     var app = j.application || {}, appS = e.application || {};

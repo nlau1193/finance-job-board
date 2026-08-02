@@ -101,6 +101,14 @@ try {
     url: "https://boards.greenhouse.io/acme/jobs/1234567",
     read: false,
     dismissed: false,
+    enrichment: {
+      fit: {
+        bucket: '<img src=x onerror="window.__fit=1">',
+        why: [],
+        red_flags: [],
+        missing: [],
+      },
+    },
   };
   writeFileSync(path.join(runRoot, "data", "jobs.local.json"), JSON.stringify({
     version: 1,
@@ -116,6 +124,10 @@ try {
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator("a.apply").count(), 1, "live fixture must expose the exact Apply link");
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
+  assert.equal(await page.evaluate(() => window.__fit || null), null,
+    "malformed local fit labels must not execute as HTML");
+  assert.equal(await page.locator("#detail img").count(), 0,
+    "malformed local fit labels must not create DOM nodes");
 
   // Existing installs used one global key before profile-scoped state shipped.
   // A first load must migrate that triage once, without leaking it to another
