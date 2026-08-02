@@ -262,10 +262,19 @@ try {
       "mobile detail focus must remain trapped");
   }
   await page.screenshot({ path: path.join(artifactDir, "mobile-detail.png"), fullPage: true });
+  // Widening an open mobile sheet must leave modal mode behind. The desktop
+  // detail panel is visible and should not keep the mobile focus trap alive.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForFunction(() => window.innerWidth === 1280 && !document.body.classList.contains("detail-open"));
+  assert.equal(await page.locator("body").evaluate((body) => body.classList.contains("detail-open")), false);
+  assert.equal(await page.locator("#detail").getAttribute("aria-modal"), "false");
+  assert.equal(await page.locator("#detail").getAttribute("aria-hidden"), "false");
+  assert.equal(await page.locator("#detail").getAttribute("inert"), null);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => window.innerWidth === 390 && document.querySelector("#detail")?.getAttribute("aria-hidden") === "true");
 
   // While a refresh is active, recovery actions stay hidden so a user cannot
   // accidentally cancel the in-flight job or start a duplicate run.
-  await page.locator("#detail-back").click();
   await page.route("**/api/refresh**", async (route) => {
     if (route.request().url().endsWith("/api/refresh")) {
       await route.fulfill({ status: 202, contentType: "application/json", body: JSON.stringify({ status: "started" }) });

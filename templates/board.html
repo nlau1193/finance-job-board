@@ -554,6 +554,13 @@
   // an off-screen panel exposed—or a visible desktop panel inert.
   function syncDetailAccessibility() {
     var mobile = window.matchMedia("(max-width:880px)").matches;
+    // A mobile detail sheet is a modal only while the viewport is mobile.
+    // If a user widens the window with a role open, leave sheet mode behind
+    // instead of keeping the document's mobile focus trap on desktop.
+    if (!mobile && document.body.classList.contains("detail-open")) {
+      document.body.classList.remove("detail-open");
+      detailTrigger = null;
+    }
     var detailOpen = mobile && document.body.classList.contains("detail-open");
     detailEl.setAttribute("aria-modal", detailOpen ? "true" : "false");
     detailEl.setAttribute("aria-hidden", mobile && !detailOpen ? "true" : "false");
