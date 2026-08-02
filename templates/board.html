@@ -290,7 +290,18 @@
   } catch (e) { overlay = {}; }
   function saveOverlay() { try { localStorage.setItem(LS_KEY, JSON.stringify(overlay)); } catch (e) {} }
   function todayKey() { var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
-  function stateOf(j) { var o = overlay[j.id]; if (!o || typeof o !== "object" || Array.isArray(o)) o = {}; return { read: o.read != null ? o.read : !!j.read, dismissed: o.dismissed != null ? o.dismissed : !!j.dismissed, applied: o.applied || null }; }
+  function stateOf(j) {
+    var o = overlay[j.id];
+    if (!o || typeof o !== "object" || Array.isArray(o)) o = {};
+    // LocalStorage is hand-editable and older installs may contain stringy
+    // state. Never let "false" become truthy and hide a live role; only the
+    // values this UI writes are accepted as durable browser state.
+    return {
+      read: typeof o.read === "boolean" ? o.read : j.read === true,
+      dismissed: typeof o.dismissed === "boolean" ? o.dismissed : j.dismissed === true,
+      applied: typeof o.applied === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(o.applied) ? o.applied : null,
+    };
+  }
   function setState(id, patch) { overlay[id] = Object.assign({}, overlay[id], patch); saveOverlay(); render(); }
   // When served (not opened as a file://), persist a dismiss to the server so the
   // role is excluded from every future refresh — not just hidden in this browser.

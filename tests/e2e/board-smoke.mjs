@@ -164,6 +164,23 @@ try {
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator("a.apply").count(), 1, "live fixture must expose the exact Apply link");
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
+
+  // Browser triage is user-local and hand-editable. A stale/corrupt overlay
+  // must not treat the string "false" as truthy and hide a live role.
+  const profileKey = await page.evaluate(() => JSON.parse(document.getElementById("board-data").textContent).meta.search_profile_key);
+  const malformedStateId = live.id;
+  await page.evaluate(({ profileKey, id }) => {
+    localStorage.setItem(`job-hunt-board-state-v2:${profileKey}`, JSON.stringify({
+      [id]: { read: "false", dismissed: "false", applied: "false" },
+    }));
+  }, { profileKey, id: malformedStateId });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.locator("#q").fill("Finance");
+  assert.equal(await page.locator("#list .row").count(), 1, "stringy false browser state must not hide a live role");
+  await page.locator("#list .row").first().click();
+  assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
+  assert.equal(await page.locator('[data-act="read"]').textContent(), "Mark read");
+  assert.equal(await page.locator('[data-act="dismiss"]').textContent(), "Dismiss");
   assert.equal(await page.evaluate(() => window.__fit || null), null,
     "malformed local fit labels must not execute as HTML");
   assert.equal(await page.evaluate(() => window.__warm || null), null,
