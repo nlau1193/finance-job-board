@@ -208,6 +208,77 @@ def test_fetch_reports_broad_search_truncation(monkeypatch):
 
     assert receipt["truncated"] is True
     assert "capped at 20 newest roles" in receipt["warning"]
+    assert receipt["pages"] == 1
+    assert receipt["page_budget"] == 1
+
+
+def test_broad_search_uses_the_smaller_any_role_budget(monkeypatch):
+    seen_offsets = []
+    post = {
+        "title": "Product Designer",
+        "externalPath": "/job/US-NY-New-York/Product-Designer_R1",
+        "locationsText": "New York, NY",
+        "bulletFields": ["R1"],
+    }
+
+    def fake_post_json(url, body, **kwargs):
+        seen_offsets.append(body["offset"])
+        return {"total": 1000, "jobPostings": [post] * workday._PAGE}
+
+    monkeypatch.setattr(workday, "post_json", fake_post_json)
+    _, receipt = workday.fetch(WORKDAY, use_cache=False)
+
+    assert seen_offsets == list(range(0, 200, workday._PAGE))
+    assert receipt["pages"] == workday._BROAD_MAX_PAGES
+    assert receipt["page_budget"] == workday._BROAD_MAX_PAGES
+    assert receipt["truncated"] is True
+    assert "broad search capped at 200 newest roles" in receipt["warning"]
+
+
+def test_fetch_shares_a_page_budget_across_search_terms(monkeypatch):
+    monkeypatch.setattr(workday, "_MAX_PAGES", 2)
+    seen = []
+
+    def fake_post_json(url, body, **kwargs):
+        seen.append((body["searchText"], body["offset"]))
+        return {"total": 100, "jobPostings": [{
+            "title": "Role",
+            "externalPath": f"/job/US-NY/Role_R{body['offset']}",
+            "locationsText": "New York, NY",
+            "bulletFields": [f"R{body['offset']}"],
+        }] * workday._PAGE}
+
+    monkeypatch.setattr(workday, "post_json", fake_post_json)
+    _, receipt = workday.fetch(WORKDAY, use_cache=False,
+                               search_terms=["first", "second", "third"])
+
+    assert len(seen) == 2
+    assert seen == [("first", 0), ("second", 0)]
+    assert receipt["pages"] == 2
+    assert receipt["page_budget"] == 2
+    assert receipt["terms_completed"] == 0
+    assert receipt["truncated"] is True
+    assert "searches capped at 40 newest roles across 3 term(s)" in receipt["warning"]
+
+
+def test_fetch_resets_offset_for_each_search_term(monkeypatch):
+    seen = []
+
+    def fake_post_json(url, body, **kwargs):
+        seen.append((body["searchText"], body["offset"]))
+        if body["searchText"] == "first":
+            return {"total": 1, "jobPostings": [{
+                "title": "First role",
+                "externalPath": "/job/US-NY/First_R1",
+                "locationsText": "New York, NY",
+                "bulletFields": ["R1"],
+            }]}
+        return {"total": 0, "jobPostings": []}
+
+    monkeypatch.setattr(workday, "post_json", fake_post_json)
+    workday.fetch(WORKDAY, use_cache=False, search_terms=["first", "second"])
+
+    assert seen == [("first", 0), ("second", 0)]
 
 
 # --- "N Locations" resolution -----------------------------------------------

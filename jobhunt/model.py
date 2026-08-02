@@ -39,13 +39,13 @@ _JOB_ID_QUERY_PARAMS = ("gh_jid",)
 # A UUID, as used in Ashby/Lever hosted posting paths.
 _UUID = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
-# Path/host patterns that identify a *specific* posting (not a board or search).
-_POSTING_PATTERNS = (
-    re.compile(rf"(?:^|\.)jobs\.ashbyhq\.com/[^/]+/{_UUID}(?:/|$)"),
-    re.compile(rf"(?:^|\.)jobs\.lever\.co/[^/]+/{_UUID}(?:/|$)"),
-    re.compile(r"(?:^|\.)(?:job-boards|boards)\.greenhouse\.io/[^/]+/jobs/\d+(?:/|$)"),
-    re.compile(r"(?:^|\.)myworkdayjobs\.com/.+/job/.+"),
-)
+# Path patterns that identify a *specific* posting (not a board or search).
+# Host matching is done separately below.  The old combined regexes accepted
+# dotted lookalikes such as ``evil.jobs.ashbyhq.com`` because ``(?:^|\.)``
+# could start in the middle of a larger hostname.
+_ASHBY_LEVER_PATH = re.compile(rf"^/[^/]+/{_UUID}(?:/.*)?$")
+_GREENHOUSE_PATH = re.compile(r"^/[^/]+/jobs/\d+(?:/.*)?$")
+_WORKDAY_PATH = re.compile(r"^/.+/job/.+$")
 
 # Hosts where a bare path (no id) is always a board/search surface, never a posting.
 _NON_POSTING_PATH = re.compile(r"^/?(search|search-results|all-jobs|openings)?/?$")
@@ -73,10 +73,19 @@ def is_actionable_url(url: object) -> bool:
             return True
 
     # 2) Known posting host/path shapes for the structured ATS platforms.
-    host_path = f"{parsed.netloc}{parsed.path}"
-    for pattern in _POSTING_PATTERNS:
-        if pattern.search(host_path):
-            return True
+    # Compare parsed hostnames rather than searching a concatenated netloc/path
+    # string.  This keeps official ATS boundaries exact while still allowing the
+    # tenant subdomains that Workday itself issues.
+    try:
+        hostname = (parsed.hostname or "").lower().rstrip(".")
+    except ValueError:
+        return False
+    if hostname in {"jobs.ashbyhq.com", "jobs.lever.co"}:
+        return bool(_ASHBY_LEVER_PATH.fullmatch(parsed.path))
+    if hostname in {"job-boards.greenhouse.io", "boards.greenhouse.io"}:
+        return bool(_GREENHOUSE_PATH.fullmatch(parsed.path))
+    if hostname.endswith(".myworkdayjobs.com"):
+        return bool(_WORKDAY_PATH.fullmatch(parsed.path))
 
     return False
 

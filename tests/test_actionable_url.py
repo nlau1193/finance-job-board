@@ -77,3 +77,27 @@ def test_query_id_must_be_numeric_and_workday_host_boundary_is_strict():
     assert not is_actionable_url("https://evil.example/?gh_jid=javascript:alert(1)")
     assert not is_actionable_url("https://evil.example/?gh_jid=not-a-number")
     assert not is_actionable_url("https://evil-myworkdayjobs.com/foo/job/x")
+
+
+def test_numeric_gh_jid_custom_domain_remains_legacy_compatible():
+    # Some official employer feeds (for example Stripe-style careers pages)
+    # carry the posting id in a numeric gh_jid query on a non-ATS hostname.
+    # This compatibility branch is intentionally broader because this helper
+    # has no company catalog context; the feed adapter is the trust boundary.
+    assert is_actionable_url("https://careers.example.com/jobs/search?gh_jid=123")
+
+
+def test_dotted_lookalike_ats_hosts_are_not_actionable():
+    # A hostname containing an official ATS name as a subdomain is still an
+    # unrelated site.  Apply links must not pass the gate on string-search
+    # coincidence alone.
+    assert not is_actionable_url(
+        "https://evil.jobs.ashbyhq.com/ramp/0907ae2a-5334-4d64-9a76-cc9428224546")
+    assert not is_actionable_url(
+        "https://evil.jobs.lever.co/netlify/a1b2c3d4-1111-2222-3333-444455556666")
+    assert not is_actionable_url(
+        "https://evil.boards.greenhouse.io/acme/jobs/123")
+    # Workday legitimately uses tenant subdomains; a suffix lookalike without
+    # the dot boundary remains rejected.
+    assert is_actionable_url(
+        "https://acme.wd1.myworkdayjobs.com/en-US/External/job/US-NY/Role_R1")

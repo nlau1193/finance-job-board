@@ -53,6 +53,13 @@ application previews so search stays responsive. The complete ATS data remains
 in your local `data/jobs.local.json`, and **Apply** still opens the official
 posting for the full details.
 
+Workday's public feed is paged, so refresh uses a bounded budget: an unrestricted
+all-role tenant contributes its 200 newest roles, while focused searches share a
+1,000-role budget. If a feed reaches that limit, the refresh receipt says so
+instead of implying the board is exhaustive. This keeps a broad refresh free,
+repeatable, and kind to employer systems; focused terms take turns so one
+keyword cannot consume the whole budget before the others get a first page.
+
 If setup does not finish, run:
 
 ```bash

@@ -194,3 +194,42 @@ The GitHub slug remains `finance-job-board` because this account has push but
 not admin permission; renaming or history surgery is a separate owner/admin
 decision. Historical unreachable objects also mean a strict Nicole-only history
 claim is not proven by this source pass.
+
+## Continuation audit — 2026-08-02
+
+The next source pass challenged the two remaining high-leverage paths before
+touching the release again. The Pivot SQL workbook handoff was cold-tested in a
+fresh browser with local storage cleared: opening `fct_gl_transactions` produced
+the sheet tab, active table, and data grid, so no Pivot change was justified.
+
+35. **Broad Workday refreshes could spend hundreds of serial requests per
+    tenant.** The adapter now caps an unrestricted any-role search at 10 pages
+    (200 newest roles) and makes focused title searches share a 50-page (1,000
+    role) budget. Each term gets a turn before any term gets a second page, and
+    finished terms release their unused turns. Per-feed receipts include
+    `pages`, `page_budget`, `terms_completed`, and an explicit truncation
+    warning. Offsets reset for each search term, so the global budget cannot
+    skip the first page of a later term.
+36. **Structured ATS Apply-link host matching accepted dotted lookalikes.** The
+    Ashby, Lever, and Greenhouse path branches now parse and compare exact hosts
+    while retaining the legitimate Workday tenant suffix boundary. This closes
+    substring coincidence in those structured branches. Numeric `gh_jid` links
+    on employer-owned custom domains remain a deliberate compatibility branch
+    for Stripe-style feeds because this helper has no company-catalog context;
+    the official feed adapter remains that branch's trust boundary.
+
+Both fixes are local, deterministic, and covered by fixture-backed tests; no
+paid provider, login, browser automation, LinkedIn data, or network-dependent
+behavior was added.
+
+### Continuation proof
+
+- `npm test`: **193 passed**, 73.26% statement coverage (the 60% gate remains
+  green).
+- `JOBBOARD_E2E_PORT=8906 JOBBOARD_E2E_ARTIFACT_DIR=/tmp/jobboard-continuation-e2e-final
+  npm run test:e2e`: **green**; the existing desktop, mobile, loading, and
+  no-server checks still pass.
+- `./jobs doctor`: **green**; 241 official ATS companies, no account/API key,
+  paid provider, or browser automation required.
+- `python3 -m py_compile jobhunt/model.py jobhunt/ats/workday.py` and
+  `git diff --check`: **clean**.

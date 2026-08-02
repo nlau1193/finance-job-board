@@ -28,10 +28,13 @@ from ._http import FetchError, get_json, new_session, post_json
 
 # An empty query is Workday's broad-board search. A company can still provide a
 # narrower `workday_search` list, and a person's configured title keywords are
-# passed in by the discovery layer when they want a focused search.
+# passed in by the discovery layer when they want a focused search. Workday
+# returns only ~20 rows per page; keep a bounded page budget across all terms so
+# one tenant cannot turn a refresh into hundreds of serial requests.
 _SEARCHES = ("",)
 _PAGE = 20  # Workday honors ~20 per page regardless of a larger `limit`
-_MAX_PAGES = 50  # safety cap: 1,000 newest results per server-side term
+_MAX_PAGES = 50  # focused-search budget: 1,000 newest roles per tenant
+_BROAD_MAX_PAGES = 10  # any-role budget: 200 newest roles per tenant
 
 
 def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = True,
@@ -57,24 +60,41 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
     else:
         searches = search_terms or _SEARCHES
     searches = tuple(dict.fromkeys(str(term).strip() for term in searches)) or _SEARCHES
+    broad_search = not configured and (search_terms is None or not search_terms)
+    # Keep the existing `_MAX_PAGES` test seam useful while making the public
+    # any-role path much cheaper.  Focused searches also share one total budget;
+    # they no longer spend 1,000 pages for every configured keyword.
+    page_budget = min(_MAX_PAGES, _BROAD_MAX_PAGES) if broad_search else _MAX_PAGES
 
     by_id: dict[str, Opportunity] = {}
     raw_total = 0
     malformed = 0
     warnings: list[str] = []
     truncated = False
+    pages_used = 0
+    term_pages = {term: 0 for term in searches}
+    finished_terms: set[str] = set()
     try:
-        for term in searches:
-            total = None
-            for page in range(_MAX_PAGES):
+        # Give each term a turn before any term gets a second page. This keeps a
+        # long first result set from consuming the entire shared budget and
+        # starving later configured keywords. Finished terms drop out, so their
+        # unused turns are naturally redistributed to the remaining terms.
+        while pages_used < page_budget and len(finished_terms) < len(searches):
+            for term in searches:
+                if term in finished_terms or pages_used >= page_budget:
+                    continue
+                page = term_pages[term]
                 body = {"appliedFacets": {}, "limit": _PAGE,
                         "offset": page * _PAGE, "searchText": term}
                 data = post_json(endpoint, body, session=http, ttl=ttl, use_cache=use_cache)
+                pages_used += 1
+                term_pages[term] += 1
                 postings = data.get("jobPostings", []) if isinstance(data, dict) else []
                 if not isinstance(postings, list):
                     postings = []
-                if isinstance(data, dict) and isinstance(data.get("total"), int):
-                    total = data["total"]
+                total = data.get("total") if isinstance(data, dict) else None
+                if not isinstance(total, int):
+                    total = None
                 raw_total += len(postings)
                 for post in postings:
                     opp = _to_opportunity(post, company, slug, host, site)
@@ -83,17 +103,19 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
                         continue
                     by_id[opp.job_id] = opp
                 if len(postings) < _PAGE or (total is not None and (page + 1) * _PAGE >= total):
-                    break  # last page for this search
-            else:
-                if total is None or total > _MAX_PAGES * _PAGE:
-                    warnings.append(
-                        f"search capped at {_MAX_PAGES * _PAGE} newest roles"
-                    )
-                    truncated = True
+                    finished_terms.add(term)
+        if len(finished_terms) < len(searches):
+            warnings.append(
+                f"{'broad search' if broad_search else 'searches'} capped at "
+                f"{page_budget * _PAGE} newest roles across {len(searches)} term(s)"
+            )
+            truncated = True
     except FetchError as exc:
         if by_id:  # partial success — keep what we got
             warnings.append(str(exc))
-            receipt.update(result="ok", count=len(by_id), raw=raw_total)
+            receipt.update(result="ok", count=len(by_id), raw=raw_total,
+                           pages=pages_used, page_budget=page_budget,
+                           terms_completed=len(finished_terms))
             if warnings:
                 receipt["warning"] = "; ".join(warnings)
             if truncated:
@@ -101,10 +123,14 @@ def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = Tru
             if malformed:
                 receipt["dropped_malformed"] = malformed
             return list(by_id.values()), receipt
-        receipt.update(result="error", error=str(exc), count=0)
+        receipt.update(result="error", error=str(exc), count=0,
+                       pages=pages_used, page_budget=page_budget,
+                       terms_completed=len(finished_terms))
         return [], receipt
 
-    receipt.update(result="ok", count=len(by_id), raw=raw_total)
+    receipt.update(result="ok", count=len(by_id), raw=raw_total,
+                   pages=pages_used, page_budget=page_budget,
+                   terms_completed=len(finished_terms))
     if warnings:
         receipt["warning"] = "; ".join(warnings)
     if truncated:
