@@ -35,6 +35,7 @@ _SEARCHES = ("",)
 _PAGE = 20  # Workday honors ~20 per page regardless of a larger `limit`
 _MAX_PAGES = 50  # focused-search budget: 1,000 newest roles per tenant
 _BROAD_MAX_PAGES = 10  # any-role budget: 200 newest roles per tenant
+_MAX_LOCATION_RESOLVES = 200  # detail GETs per refresh, across all tenants
 
 
 def fetch(company: dict, *, session=None, ttl: int = 3600, use_cache: bool = True,
@@ -201,20 +202,35 @@ def is_multi_location(location: str | None) -> bool:
 
 
 def resolve_locations(opportunities, companies: list[dict], *, session=None,
-                      ttl: int = 3600, use_cache: bool = True) -> int:
+                      ttl: int = 3600, use_cache: bool = True,
+                      max_targets: int = _MAX_LOCATION_RESOLVES) -> int:
     """Resolve "N Locations" postings to their real location list, in place.
 
     One cached detail GET per posting (`/wday/cxs/{tenant}/{site}{externalPath}`
     → `jobPostingInfo.location` + `additionalLocations`). Call it on the small
-    title-matched set only — never the whole tenant. A posting whose detail
-    can't be fetched keeps its original location (and thus its original filter
-    outcome). Returns how many postings were resolved.
+    title-matched set only — never the whole tenant. A refresh-wide cap keeps a
+    broad any-role board from turning multi-location resolution into thousands
+    of extra requests; targets are sampled round-robin by company so one tenant
+    cannot consume the whole detail budget. A posting whose detail can't be
+    fetched keeps its original location (and thus its original filter outcome).
+    Returns how many postings were resolved.
     """
     cfg = {c.get("slug"): c for c in companies
            if (c.get("ats") or "").lower() == "workday"}
-    targets = [o for o in opportunities
-               if o.ats == "workday" and is_multi_location(o.location)
-               and cfg.get(o.company_slug)]
+    candidates = [o for o in opportunities
+                  if o.ats == "workday" and is_multi_location(o.location)
+                  and cfg.get(o.company_slug)]
+    budget = max(0, int(max_targets))
+    grouped: dict[str, list[Opportunity]] = {}
+    for opp in candidates:
+        grouped.setdefault(opp.company_slug, []).append(opp)
+    targets = []
+    for index in range(max((len(items) for items in grouped.values()), default=0)):
+        for items in grouped.values():
+            if index < len(items) and len(targets) < budget:
+                targets.append(items[index])
+        if len(targets) >= budget:
+            break
     if not targets:
         return 0
 

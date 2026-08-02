@@ -4,6 +4,7 @@ from pathlib import Path
 
 import jobs
 from jobhunt import discover, enrich, store
+from jobhunt.ats import workday
 from jobhunt.model import Opportunity
 
 
@@ -97,6 +98,36 @@ def test_refresh_pipeline_surfaces_malformed_feed_rows_without_dropping_good_row
         "company": "Acme",
         "warning": "Skipped 1 malformed posting row(s); other rows were kept",
     }]
+
+
+def test_refresh_skips_workday_location_details_for_unrestricted_locations(monkeypatch, tmp_path):
+    company = {
+        "name": "Acme", "slug": "acme", "ats": "workday",
+        "workday_host": "acme.wd1.myworkdayjobs.com",
+        "workday_tenant": "acme", "workday_site": "External",
+    }
+    posting = workday._to_opportunity(
+        {
+            "title": "Finance Lead",
+            "externalPath": "/job/New-York/Finance-Lead_R1",
+            "locationsText": "3 Locations",
+            "bulletFields": ["R1"],
+        }, company, "acme", company["workday_host"], company["workday_site"])
+    board_path = _wire_pipeline(
+        monkeypatch,
+        tmp_path,
+        raw=[posting],
+        receipts=[{"company": "Acme", "ats": "workday", "result": "ok", "count": 1}],
+    )
+
+    def should_not_fetch(*args, **kwargs):
+        raise AssertionError("unrestricted locations should not resolve Workday details")
+
+    monkeypatch.setattr(workday, "resolve_locations", should_not_fetch)
+    payload = jobs.refresh_board()
+
+    assert [item["id"] for item in payload["opportunities"]] == [posting.id]
+    assert store.load_opportunities(board_path)[0].location == "3 Locations"
 
 
 def test_refresh_pipeline_keeps_last_good_board_on_feed_outage(monkeypatch, tmp_path):

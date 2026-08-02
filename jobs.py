@@ -138,14 +138,35 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
     # Workday's list API reports multi-location postings as an opaque
     # "N Locations", which the location filter can only drop. Resolve the real
     # location list first so a preferred location inside a multi-location req survives.
+    # An unrestricted location profile already keeps these rows, so avoid detail
+    # calls that cannot change the verdict. The Workday helper caps the remaining
+    # refresh-wide detail work and samples tenants fairly.
     from jobhunt.ats import workday as workday_ats
+    configured_locations = {
+        term.strip().lower() for term in profile.locations
+        if isinstance(term, str) and term.strip()
+    }
     multi_loc = [o for o in raw
                  if o.ats == "workday" and workday_ats.is_multi_location(o.location)
                  and title_matches(o, profile)]
+    location_warnings = []
+    if configured_locations & {"all", "any"}:
+        multi_loc = []
     if multi_loc:
         _emit("filtering", 0, 0,
               f"Resolving {len(multi_loc)} multi-location Workday postings…")
-        workday_ats.resolve_locations(multi_loc, companies, use_cache=not no_cache)
+        location_cap = workday_ats._MAX_LOCATION_RESOLVES
+        if len(multi_loc) > location_cap:
+            location_warnings.append({
+                "company": "Workday",
+                "warning": (
+                    f"Resolved {location_cap} of {len(multi_loc)} multi-location "
+                    "postings; the remainder kept their feed location"
+                ),
+            })
+        workday_ats.resolve_locations(
+            multi_loc, companies, use_cache=not no_cache, max_targets=location_cap
+        )
 
     keeps, maybes = [], []
     for o in raw:
@@ -204,7 +225,7 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
 
     resolved = sum(1 for r in receipts if r.get("result") == "ok")
     errored = [r for r in receipts if r.get("result") != "ok"]
-    warnings = [
+    warnings = location_warnings + [
         {"company": r.get("company"), "warning": r.get("warning")}
         for r in receipts if r.get("warning")
     ]

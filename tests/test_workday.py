@@ -369,3 +369,42 @@ def test_resolve_locations_empty_detail_is_not_resolved(monkeypatch):
     opp = _multi_loc_opp()
     assert workday.resolve_locations([opp], [ADOBE]) == 0
     assert opp.location == "3 Locations"
+
+
+def test_resolve_locations_caps_and_samples_companies(monkeypatch):
+    other = dict(ADOBE,
+                 name="Acme",
+                 slug="acme",
+                 workday_host="acme.wd1.myworkdayjobs.com",
+                 workday_tenant="acme",
+                 workday_site="External")
+    companies = [ADOBE, other]
+    opportunities = []
+    for company in companies:
+        for index in range(3):
+            post = {
+                "title": "Finance Lead",
+                "externalPath": f"/job/New-York/Finance-Lead_R{company['slug']}{index}",
+                "locationsText": "3 Locations",
+                "bulletFields": [f"R-{company['slug']}-{index}"],
+            }
+            opportunities.append(workday._to_opportunity(
+                post, company, company["slug"], company["workday_host"],
+                company["workday_site"]))
+
+    seen_urls = []
+
+    def fake_get_json(url, **kwargs):
+        seen_urls.append(url)
+        return {"jobPostingInfo": {"location": "New York", "additionalLocations": []}}
+
+    monkeypatch.setattr(workday, "get_json", fake_get_json)
+    resolved = workday.resolve_locations(opportunities, companies, max_targets=4)
+
+    assert resolved == 4
+    assert len(seen_urls) == 4
+    assert sum(opp.location == "New York" for opp in opportunities) == 4
+    # Round-robin sampling gives both tenants a chance before a first tenant's
+    # third posting can consume the remaining budget.
+    assert "adobe" in seen_urls[0] and "acme" in seen_urls[1]
+    assert sum(opp.location == "3 Locations" for opp in opportunities) == 2

@@ -59,6 +59,9 @@ all-role tenant contributes its 200 newest roles, while focused searches share a
 instead of implying the board is exhaustive. This keeps a broad refresh free,
 repeatable, and kind to employer systems; focused terms take turns so one
 keyword cannot consume the whole budget before the others get a first page.
+Multi-location detail lookups are skipped when locations are unrestricted and
+otherwise capped at 200 per refresh, with any skipped work called out in the
+local receipt.
 
 If setup does not finish, run:
 

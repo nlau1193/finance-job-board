@@ -209,7 +209,9 @@ the sheet tab, active table, and data grid, so no Pivot change was justified.
     finished terms release their unused turns. Per-feed receipts include
     `pages`, `page_budget`, `terms_completed`, and an explicit truncation
     warning. Offsets reset for each search term, so the global budget cannot
-    skip the first page of a later term.
+    skip the first page of a later term. Multi-location detail GETs are skipped
+    for unrestricted locations and capped at 200 per refresh otherwise, with
+    fair tenant sampling and a visible warning for any remainder.
 36. **Structured ATS Apply-link host matching accepted dotted lookalikes.** The
     Ashby, Lever, and Greenhouse path branches now parse and compare exact hosts
     while retaining the legitimate Workday tenant suffix boundary. This closes
@@ -224,9 +226,9 @@ behavior was added.
 
 ### Continuation proof
 
-- `npm test`: **193 passed**, 73.26% statement coverage (the 60% gate remains
+- `npm test`: **195 passed**, 73.36% statement coverage (the 60% gate remains
   green).
-- `JOBBOARD_E2E_PORT=8906 JOBBOARD_E2E_ARTIFACT_DIR=/tmp/jobboard-continuation-e2e-final
+- `JOBBOARD_E2E_PORT=8907 JOBBOARD_E2E_ARTIFACT_DIR=/tmp/jobboard-continuation-e2e-cap
   npm run test:e2e`: **green**; the existing desktop, mobile, loading, and
   no-server checks still pass.
 - `./jobs doctor`: **green**; 241 official ATS companies, no account/API key,
