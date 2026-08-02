@@ -48,6 +48,20 @@ def test_render_no_script_breakout(tmp_path):
     assert "\\u003c" in data_blob  # angle brackets were escaped
 
 
+def test_render_sanitizes_local_description_before_inner_html(tmp_path):
+    # ATS adapters sanitize their payloads, but a user can still have an old or
+    # hand-edited local board. The browser detail view uses innerHTML for the
+    # allowlisted formatting, so render must enforce that boundary again.
+    o = opp("1")
+    o.description_html = '<p>safe</p><img src=x onerror="alert(1)"><script>alert(2)</script>'
+    out = tmp_path / "index.html"
+    board.render(board.build_board_data([o], generated_at="2026-06-30T00:00:00Z"), out_path=out)
+    html = out.read_text(encoding="utf-8")
+    assert "safe" in html
+    assert "<img" not in html
+    assert "<script>alert(2)</script>" not in html
+
+
 def test_render_empty_board(tmp_path):
     data = board.build_board_data([], generated_at="2026-06-30T00:00:00Z")
     out = tmp_path / "index.html"

@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 
 from .model import Opportunity
+from .sanitize import clean_description
 from .store import atomic_write_text
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,16 +69,31 @@ def _compact_application(raw: object) -> dict:
 
 
 def _browser_payload(board_data: dict) -> dict:
-    """Return a light browser view without changing the complete local board file."""
+    """Return a safe, light browser view without changing local board data.
+
+    ATS adapters sanitize descriptions before they reach storage, but the local
+    board file is hand-editable and can be stale or copied from another tool.
+    The browser detail view intentionally uses ``innerHTML`` for the allowlisted
+    formatting, so this final render boundary must sanitize again rather than
+    trusting arbitrary local JSON.
+    """
     opportunities = board_data.get("opportunities") or []
+    safe_opportunities = []
+    for item in opportunities:
+        if not isinstance(item, dict):
+            continue
+        view = dict(item)
+        view["description_html"] = clean_description(view.get("description_html"))
+        safe_opportunities.append(view)
     estimated_bytes = sum(
         len(str(item.get("description_html") or ""))
         + len(json.dumps(item.get("application") or {}, ensure_ascii=False))
-        for item in opportunities
-        if isinstance(item, dict)
+        for item in safe_opportunities
     )
     if len(opportunities) <= _COMPACT_THRESHOLD_OPPORTUNITIES and estimated_bytes <= _COMPACT_THRESHOLD_BYTES:
-        return board_data
+        safe = dict(board_data)
+        safe["opportunities"] = safe_opportunities
+        return safe
 
     compact = dict(board_data)
     compact_meta = dict(board_data.get("meta") or {})
@@ -85,9 +101,7 @@ def _browser_payload(board_data: dict) -> dict:
     compact_meta["board_compacted_postings"] = len(opportunities)
     compact["meta"] = compact_meta
     compact["opportunities"] = []
-    for item in opportunities:
-        if not isinstance(item, dict):
-            continue
+    for item in safe_opportunities:
         view = dict(item)
         view["description_html"] = _description_preview(item.get("description_html"))
         view["application"] = _compact_application(item.get("application"))
