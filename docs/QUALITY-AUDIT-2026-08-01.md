@@ -292,3 +292,41 @@ Proof for this pass:
 - Taste lint remains **0 errors, 0 warnings, 0 suggestions**. The unavailable
   Impeccable source fallback reported the same nine pre-existing visual
   heuristics; none warranted churn.
+
+## Current clean-clone verification receipt — 2026-08-02
+
+This receipt records the source that is actually public now. It supersedes the
+older numeric snapshots above without rewriting those historical receipts.
+
+- Exact public source: **`4fc1a4f85ec73c375ec8e1756b8618c99e80136f`**, authored by
+  Nicole (`nlau1193`) and aligned with `origin/main`.
+- A fresh depth-one clone ran `./jobs setup` and `./jobs doctor` successfully:
+  241 official ATS companies, a fictional sample board, and no account, API
+  key, paid provider, or browser automation requirement.
+- The contributor quality gate ran with **217 passed** and **78.41% statement
+  coverage** (`--cov-fail-under=60`). `npm test` reproduced the same result.
+  `npm run test:e2e` passed on the clean clone and captured desktop, mobile,
+  loading, and no-server recovery screenshots.
+- Ten synthetic technology profiles (iOS/mobile, backend, product management,
+  data, security, DevOps/SRE, quality, product design, applied AI, and
+  solutions architecture) each configured and refreshed successfully against
+  a single official Greenhouse feed in the clean clone. Every run returned
+  `1/1` resolved and exit code 0; the focused result counts ranged from 0 to 14.
+  No resume, connection export, or live personal profile was used.
+- Direct Chromium proof covered 320px and 1280px layouts with no horizontal
+  overflow, closed mobile detail with `aria-hidden=true` and `inert`, and a
+  mobile-open → desktop resize that removed the modal body lock while leaving
+  the detail visible. Host and cross-origin requests returned 403; concurrent
+  refresh requests returned 202 followed by `already_running`.
+- Additional checks: Python `compileall`, `shellcheck jobs`, `gitleaks detect`,
+  and `npm audit --omit=dev --audit-level=high` all passed (`no leaks`, `0
+  vulnerabilities`). The available Ruff run still reports ten style-only
+  findings (mostly semicolon statements and the intentional `sys.path` import);
+  those are recorded as cleanup candidates, not hidden as a green lint gate.
+- GitHub Actions run **30761214181** is green for this exact head:
+  <https://github.com/nlau1193/finance-job-board/actions/runs/30761214181>.
+
+The product and README remain category-neutral (**Job Hunt Board**); the
+GitHub slug is still `finance-job-board` because rename/admin permission is an
+owner-controlled gate. The older 188/200/201/205 test counts above are retained
+as history and should not be read as the current release proof.
