@@ -106,8 +106,8 @@ preserving the local-first, no-paid-tool default.
 
 ### Release boundary and remaining work
 
-The current branch is a clean two-commit public release and the checked-in tree
-contains no `.env.example`, API-key provider tooling, live board data, or private
+The current branch is a clean public release and the checked-in tree
+contains no `.env` or `.env.example`, API-key provider tooling, live board data, or private
 connections. Git hosting still retains unreachable historical objects that can
 be fetched by an old SHA; one such object exposes the earlier Leo author email
 and removed optional tooling. This is not a current-tree credential leak, but it
@@ -226,12 +226,13 @@ behavior was added.
 
 ### Continuation proof
 
-- `npm test`: **195 passed**, 73.36% statement coverage (the 60% gate remains
+- `./.venv/bin/python -m pytest -q`: **200 passed**, 74.92% statement coverage (the 60% gate remains
   green).
 - `JOBBOARD_E2E_PORT=8907 JOBBOARD_E2E_ARTIFACT_DIR=/tmp/jobboard-continuation-e2e-cap
   npm run test:e2e`: **green**; the existing desktop, mobile, loading, and
   no-server checks still pass.
 - `./jobs doctor`: **green**; 241 official ATS companies, no account/API key,
   paid provider, or browser automation required.
-- `python3 -m py_compile jobhunt/model.py jobhunt/ats/workday.py` and
+- `./jobs serve --port -1 --no-open` now fails with a friendly argparse message,
+  without a traceback; `python3 -m py_compile jobhunt/model.py jobhunt/ats/workday.py` and
   `git diff --check`: **clean**.

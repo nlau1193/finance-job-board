@@ -734,6 +734,17 @@ def _csv_values(raw: str) -> list[str]:
     return [value.strip() for value in raw.split(",") if value.strip()]
 
 
+def _port_arg(raw: str) -> int:
+    """Parse a TCP port into the range accepted by the standard library."""
+    try:
+        port = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise argparse.ArgumentTypeError("port must be a whole number between 1 and 65535") from exc
+    if not 1 <= port <= 65535:
+        raise argparse.ArgumentTypeError("port must be between 1 and 65535")
+    return port
+
+
 def _write_search_config(config: dict) -> None:
     path = _ensure_search_local()
     tmp = path.with_suffix(".tmp")
@@ -768,11 +779,13 @@ def cmd_configure(args) -> int:
             normalized = raw.strip().lower()
             if arg_name == "titles" and normalized in {"", "all", "any"}:
                 values = []
+            elif arg_name == "exclude" and normalized in {"", "all", "any", "none", "no"}:
+                values = []
             elif arg_name == "locations" and normalized in {"all", "any"}:
                 values = ["all"]
             else:
                 values = _csv_values(raw)
-            if not values and arg_name != "titles":
+            if not values and arg_name not in {"titles", "exclude"}:
                 err(f"--{arg_name} needs at least one comma-separated value")
                 return 1
             config[field_name] = values
@@ -1003,14 +1016,14 @@ def main(argv=None) -> int:
 
     sub.add_parser("board", help="rebuild board HTML (no network)")
     op = sub.add_parser("open", help="serve + open the board with one-click refresh")
-    op.add_argument("--port", type=int, default=8787, help="port to serve on (default 8787)")
+    op.add_argument("--port", type=_port_arg, default=8787, help="port to serve on (default 8787)")
     op.add_argument("--no-open", action="store_true", help="do not open a browser automatically")
     sub.add_parser("doctor", help="health check")
 
     cf = sub.add_parser("configure", aliases=["config"], help="show or update private search preferences")
     cf.add_argument("--interactive", action="store_true", help="answer a few plain-English setup questions")
     cf.add_argument("--titles", help="comma-separated job-title keywords, or `all`")
-    cf.add_argument("--exclude", help="comma-separated title words to exclude")
+    cf.add_argument("--exclude", help="comma-separated title words to exclude, or `none` to clear")
     cf.add_argument("--locations", help="comma-separated locations")
     cf.add_argument("--companies", help="comma-separated company names/slugs, or `all`")
     cf.add_argument("--remote", choices=("yes", "no"), help="include remote roles")
@@ -1020,7 +1033,7 @@ def main(argv=None) -> int:
 
     for command in ("start", "serve"):
         sv = sub.add_parser(command, help="open the local board with one-click refresh")
-        sv.add_argument("--port", type=int, default=8787, help="port to serve on (default 8787)")
+        sv.add_argument("--port", type=_port_arg, default=8787, help="port to serve on (default 8787)")
         sv.add_argument("--no-open", action="store_true", help="do not open a browser automatically")
 
     rd = sub.add_parser("read", help="mark a posting read"); rd.add_argument("id")

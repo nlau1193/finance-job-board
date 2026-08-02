@@ -75,6 +75,21 @@ def test_configure_all_titles_clears_title_filter(tmp_path, monkeypatch):
     assert saved["title_keywords"] == []
 
 
+def test_configure_none_clears_title_exclusions(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    for value in ("none", ""):
+        assert jobs.cmd_configure(_config_args(exclude=value)) == 0
+        saved = json.loads((tmp_path / "search.local.json").read_text(encoding="utf-8"))
+        assert saved["title_exclude"] == []
+
+
+def test_cli_rejects_invalid_server_port():
+    import pytest
+
+    with pytest.raises(SystemExit):
+        jobs.main(["serve", "--port", "-1"])
+
+
 def test_configure_all_locations_uses_explicit_all_sentinel(tmp_path, monkeypatch):
     _isolate_search(tmp_path, monkeypatch)
     assert jobs.cmd_configure(_config_args(locations="all")) == 0
