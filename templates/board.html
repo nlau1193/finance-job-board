@@ -535,25 +535,31 @@
   function renderDetail() {
     var j = jobs.filter(function (x){return x.id===selectedId;})[0];
     if (!j) {
-      var emptyMobile = window.matchMedia("(max-width:880px)").matches;
-      var emptyOpen = emptyMobile && document.body.classList.contains("detail-open");
-      detailEl.setAttribute("aria-modal", "false");
-      detailEl.setAttribute("aria-hidden", emptyMobile && !emptyOpen ? "true" : "false");
-      if (emptyMobile && !emptyOpen) detailEl.setAttribute("inert", ""); else detailEl.removeAttribute("inert");
       detailEl.innerHTML = '<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">Select a role</h2><p>Click a job to read the full posting and your edge here.</p></div></div>';
+      syncDetailAccessibility();
       return;
     }
     detailEl.innerHTML = detailHtml(j); detailEl.scrollTop = 0;
+    syncDetailAccessibility();
     var mobile = window.matchMedia("(max-width:880px)").matches;
-    var detailOpen = mobile && document.body.classList.contains("detail-open");
-    detailEl.setAttribute("aria-modal", detailOpen ? "true" : "false");
-    detailEl.setAttribute("aria-hidden", mobile && !detailOpen ? "true" : "false");
-    if (mobile && !detailOpen) detailEl.setAttribute("inert", ""); else detailEl.removeAttribute("inert");
     if (mobile && document.body.classList.contains("detail-open")) {
       var back = $("detail-back");
       if (back && !detailEl.contains(document.activeElement)) back.focus();
     }
   }
+
+  // The detail panel's CSS mode can change without a render (for example,
+  // when a desktop window is dragged below the mobile breakpoint). Keep its
+  // accessibility state aligned with the actual viewport instead of leaving
+  // an off-screen panel exposed—or a visible desktop panel inert.
+  function syncDetailAccessibility() {
+    var mobile = window.matchMedia("(max-width:880px)").matches;
+    var detailOpen = mobile && document.body.classList.contains("detail-open");
+    detailEl.setAttribute("aria-modal", detailOpen ? "true" : "false");
+    detailEl.setAttribute("aria-hidden", mobile && !detailOpen ? "true" : "false");
+    if (mobile && !detailOpen) detailEl.setAttribute("inert", ""); else detailEl.removeAttribute("inert");
+  }
+  window.addEventListener("resize", syncDetailAccessibility);
 
   function selectJob(id) {
     selectedId = id;
@@ -575,8 +581,7 @@
     var trigger = detailTrigger;
     detailTrigger = null;
     document.body.classList.remove("detail-open");
-    detailEl.setAttribute("aria-modal", "false");
-    if (window.matchMedia("(max-width:880px)").matches) { detailEl.setAttribute("aria-hidden", "true"); detailEl.setAttribute("inert", ""); }
+    syncDetailAccessibility();
     if (restoreFocus !== false && trigger && document.contains(trigger)) trigger.focus();
   }
 
@@ -588,7 +593,7 @@
       if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
       listEl.setAttribute("aria-activedescendant", "");
       listEl.innerHTML='<div class="empty-state"><h2>No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div>';
-      detailEl.innerHTML='<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div></div>'; countEl.textContent=""; return;
+      detailEl.innerHTML='<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div></div>'; syncDetailAccessibility(); countEl.textContent=""; return;
     }
     if (shown.length===0) {
       if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);

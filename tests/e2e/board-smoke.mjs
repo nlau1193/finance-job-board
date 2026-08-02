@@ -76,6 +76,24 @@ try {
   const emptyDetailLabel = await page.locator("#detail").getAttribute("aria-labelledby");
   assert.equal(await page.locator(`#${emptyDetailLabel}`).count(), 1, "empty detail dialog must have a real label target");
 
+  // A breakpoint change does not re-render the board. The detail panel must
+  // still track whether it is off-screen on mobile or visible on desktop.
+  const detail = page.locator("#detail");
+  assert.equal(await detail.getAttribute("aria-hidden"), "false");
+  assert.equal(await detail.getAttribute("inert"), null);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => document.querySelector("#detail")?.getAttribute("aria-hidden") === "true");
+  assert.equal(await detail.getAttribute("inert"), "");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForFunction(() => document.querySelector("#detail")?.getAttribute("aria-hidden") === "false");
+  assert.equal(await detail.getAttribute("inert"), null);
+  // Also cover the reverse direction after a mobile detail panel was closed.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => document.querySelector("#detail")?.getAttribute("aria-hidden") === "true");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForFunction(() => document.querySelector("#detail")?.getAttribute("aria-hidden") === "false");
+  assert.equal(await detail.getAttribute("inert"), null);
+
   await page.locator("#q").fill("Product");
   assert.equal(await page.locator("#list .row").count(), 1, "sample search should find Product Designer");
   await page.locator("#list .row").first().click();
