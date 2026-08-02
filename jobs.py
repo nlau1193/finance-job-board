@@ -555,6 +555,12 @@ def cmd_linkedin(args) -> int:
     """Print ordinary LinkedIn search links. Never logs in or automates LinkedIn."""
     from jobhunt import linkedin
     company = args.company
+    if company.strip().casefold() in {"setup", "login"}:
+        err(
+            "There is no LinkedIn setup or login here. The optional warm path is "
+            "links-only: add your own Connections CSV or open a search link yourself."
+        )
+        return 2
     links = linkedin.linkedin_links(company)
     head(f"LinkedIn warm path — {company}")
     say("Optional links to open yourself. This tool never logs in, scrapes, or clicks:")
