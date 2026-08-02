@@ -347,3 +347,40 @@ of quietly treating Chromium as the whole browser contract.
   visible focusables for future diagnosis.
 - The existing local-only, exact-Apply-link, no-paid-provider boundaries are
   unchanged. This is a narrow accessibility fix, not a visual redesign.
+
+## Bounded takeover receipt — 2026-08-02
+
+This is the current public any-job source receipt after a fresh-clone review.
+
+- Public source is `6127adc` on `nlau1193/finance-job-board`, authored and
+  pushed as Nicole. The product copy and package are **Job Hunt Board** and
+  category-neutral; the remote slug remains `finance-job-board` because the
+  authenticated account has push but not admin permission. A requested GitHub
+  rename attempt returned HTTP 404, so no owner-gated metadata or history
+  surgery was performed.
+- A reproduced visibility bug is fixed: malformed browser-local triage such as
+  `{read: "false", dismissed: "false"}` no longer hides a live role. Only the
+  boolean/date shapes written by the UI are accepted, with an E2E regression.
+- Fresh clone: `./jobs setup` booted a private environment and fictional board;
+  installing `requirements-dev.txt` then ran **226 pytest tests** green.
+  Ruff, Python compileall, shellcheck, and `git diff --check` are green.
+- Clean-clone Playwright E2E is green in **Chromium, Firefox, and WebKit**;
+  the suite covers search, exact Apply links, malformed local state, refresh
+  loading/no-server recovery, keyboard paths, dismiss persistence, and mobile
+  detail. Taste lint reports **0 errors, 0 warnings, 0 suggestions** for the
+  public docs. Clipdiff confirmed the only source delta is the 29-line focused
+  state fix; the Impeccable skill/CLI was unavailable, so no detector result is
+  claimed.
+- GitHub Actions run **30769407119** is green for this exact public source:
+  <https://github.com/nlau1193/finance-job-board/actions/runs/30769407119>.
+- Ten synthetic technology profiles (frontend, backend, mobile, analyst, data,
+  ML, product, security, platform, and design) each completed a real
+  config-load → filter → board-render flow. Foreign and out-of-market onsite
+  roles were rejected; no resume, LinkedIn export, or private connection data
+  entered the public tree.
+
+The remaining follow-ups are explicit rather than hidden: the first-run path
+still needs a contributor-only dev dependency step, the E2E helper intentionally
+reuses the local Python environment, broad Workday feeds are bounded, and the
+long-board cap could be clearer on mobile. No paid provider, LinkedIn login,
+employer write, or live refresh claim was added.
