@@ -185,11 +185,11 @@ def warm_path(opp: Opportunity, connections: dict[str, list[dict]]) -> dict:
 # --- Freshness -------------------------------------------------------------
 
 def freshness(opp: Opportunity, now: datetime | None = None) -> dict:
-    if not opp.posted_at:
+    if not isinstance(opp.posted_at, str) or not opp.posted_at:
         return {}
     try:
         dt = datetime.fromisoformat(opp.posted_at.replace("Z", "+00:00"))
-    except ValueError:
+    except (TypeError, ValueError):
         return {}
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)

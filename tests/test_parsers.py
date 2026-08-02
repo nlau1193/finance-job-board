@@ -65,6 +65,28 @@ def test_ashby_skips_unlisted(monkeypatch):
     assert "Hidden Role" not in titles
 
 
+def test_ashby_drops_non_text_published_at(monkeypatch):
+    payload = {"jobs": [{
+        "id": "bad-date",
+        "title": "Bad date role",
+        "jobUrl": "https://jobs.ashbyhq.com/acme/bad-date",
+        "location": "Remote",
+        "publishedAt": 123,
+    }, {
+        "id": "good-date",
+        "title": "Good date role",
+        "jobUrl": "https://jobs.ashbyhq.com/acme/good-date",
+        "location": "Remote",
+        "publishedAt": "2026-08-02T12:00:00+00:00",
+    }]}
+    monkeypatch.setattr(ashby, "get_json", lambda *a, **k: payload)
+
+    opps, receipt = ashby.fetch({"name": "Acme", "slug": "acme"})
+
+    assert [opp.title for opp in opps] == ["Good date role"]
+    assert receipt["dropped_malformed"] == 1
+
+
 def test_lever_parser(monkeypatch, load_fixture):
     fixture = load_fixture("lever_netlify.json")
     monkeypatch.setattr(lever, "get_json", lambda *a, **k: fixture)

@@ -96,3 +96,13 @@ def test_nonfinite_and_future_cache_timestamps_are_misses(monkeypatch, tmp_path)
 
     path.write_text('{"fetched_epoch":' + "9" * 500 + ',"payload":{"old":true}}', encoding="utf-8")
     assert http._read_cache(path, 3600) is None
+
+
+def test_cache_write_is_atomic_and_leaves_valid_json(monkeypatch, tmp_path):
+    monkeypatch.setattr(http, "CACHE_DIR", tmp_path)
+    path = http._cache_path("https://x/atomic")
+
+    http._write_cache(path, {"rows": [1, 2, 3]})
+
+    assert http._read_cache(path, 3600) == {"rows": [1, 2, 3]}
+    assert list(tmp_path.glob("*.tmp")) == []

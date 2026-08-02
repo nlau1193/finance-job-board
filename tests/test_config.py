@@ -199,9 +199,9 @@ def test_company_shortlist_accepts_names_and_slugs(tmp_path, monkeypatch):
     local.write_text(json.dumps({"companies": ["Ramp", "stripe"]}), encoding="utf-8")
     (tmp_path / "companies.json").write_text(json.dumps({
         "companies": [
-            {"name": "Ramp", "slug": "ramp"},
-            {"name": "Stripe", "slug": "stripe"},
-            {"name": "Brex", "slug": "brex"},
+            {"name": "Ramp", "slug": "ramp", "ats": "ashby"},
+            {"name": "Stripe", "slug": "stripe", "ats": "greenhouse"},
+            {"name": "Brex", "slug": "brex", "ats": "greenhouse"},
         ],
     }), encoding="utf-8")
     monkeypatch.setattr(jobs, "CONFIG", tmp_path)
@@ -213,7 +213,7 @@ def test_company_shortlist_rejects_unknown_company(tmp_path, monkeypatch):
     _, local = _isolate_search(tmp_path, monkeypatch)
     local.write_text(json.dumps({"companies": ["Imaginary Finance Co"]}), encoding="utf-8")
     (tmp_path / "companies.json").write_text(json.dumps({
-        "companies": [{"name": "Ramp", "slug": "ramp"}],
+        "companies": [{"name": "Ramp", "slug": "ramp", "ats": "ashby"}],
     }), encoding="utf-8")
     monkeypatch.setattr(jobs, "CONFIG", tmp_path)
 
@@ -223,6 +223,32 @@ def test_company_shortlist_rejects_unknown_company(tmp_path, monkeypatch):
         assert "Imaginary Finance Co" in str(exc)
     else:
         raise AssertionError("unknown company should be rejected")
+
+
+def test_company_catalog_rejects_malformed_entry(tmp_path, monkeypatch):
+    _isolate_search(tmp_path, monkeypatch)
+    (tmp_path / "companies.json").write_text(json.dumps({"companies": [None]}), encoding="utf-8")
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+
+    try:
+        jobs._load_companies()
+    except ValueError as exc:
+        assert "entry 1 must be an object" in str(exc)
+    else:
+        raise AssertionError("malformed company catalog should fail closed")
+
+
+def test_configure_rejects_unknown_company_without_writing(tmp_path, monkeypatch):
+    _, local = _isolate_search(tmp_path, monkeypatch)
+    jobs._ensure_search_local()
+    before = local.read_text(encoding="utf-8")
+    (tmp_path / "companies.json").write_text(json.dumps({
+        "companies": [{"name": "Ramp", "slug": "ramp", "ats": "ashby"}],
+    }), encoding="utf-8")
+    monkeypatch.setattr(jobs, "CONFIG", tmp_path)
+
+    assert jobs.cmd_configure(_config_args(companies="Imaginary Co")) == 1
+    assert local.read_text(encoding="utf-8") == before
 
 
 def test_ensure_live_data_copies_sample_when_board_missing(tmp_path, monkeypatch):

@@ -11,6 +11,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
+import tempfile
 import time
 from pathlib import Path
 
@@ -58,13 +60,29 @@ def _read_cache(path: Path, ttl: int) -> object | None:
 
 
 def _write_cache(path: Path, payload: object) -> None:
+    tmp_path: Path | None = None
     try:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps({"fetched_epoch": time.time(), "payload": payload}),
+        serialized = json.dumps({"fetched_epoch": time.time(), "payload": payload})
+        with tempfile.NamedTemporaryFile(
+            mode="w",
             encoding="utf-8",
-        )
-    except OSError:
+            dir=CACHE_DIR,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
+            handle.write(serialized)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+    except (OSError, TypeError, ValueError):
+        if tmp_path is not None:
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
         pass  # cache is best-effort; never fail a refresh over it
 
 

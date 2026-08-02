@@ -68,6 +68,10 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
         return None
     location = raw_location.strip()
     department = raw_department.strip() or None
+    posted_at = job.get("publishedAt")
+    if posted_at is not None and not isinstance(posted_at, str):
+        return None
+    posted_at = posted_at.strip() or None if posted_at else None
     return Opportunity(
         id=Opportunity.make_id("ashby", slug, job_id),
         company=company.get("name", slug),
@@ -79,7 +83,7 @@ def _to_opportunity(job: dict, company: dict, slug: str) -> Opportunity | None:
         job_id=job_id,
         department=department,
         remote=bool(job.get("isRemote")),
-        posted_at=job.get("publishedAt"),
+        posted_at=posted_at,
         tags=list(company.get("tags", [])),
         description_html=clean_description(job.get("descriptionHtml")),
         employment_type=normalize_employment(job.get("employmentType")),

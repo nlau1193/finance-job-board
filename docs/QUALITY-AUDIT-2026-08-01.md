@@ -261,3 +261,34 @@ links-only LinkedIn boundaries remain unchanged. The GitHub slug is still
 `finance-job-board` because the public account has push but not admin access;
 the stale root deployment and any owner-only rename/transfer/history operation
 remain outside this source-only pass.
+
+## Thermo/Ponytail simplification and input hardening — 2026-08-02
+
+The simplification decision is to keep the current Job Hunt Board path: one
+category-neutral search, one local refresh, and one clear Apply action. No new
+sidebar, connection product, or visual redesign was justified. Internal
+compatibility keys remain private implementation details.
+
+Three reproduced failure modes are now closed without adding a provider or a
+paid dependency:
+
+- `./jobs configure --companies` validates names/slugs against the public
+  catalog before writing, so an unknown company cannot leave a broken private
+  profile behind. The catalog also fails closed with a useful entry number when
+  it contains `null` or a missing required field.
+- Ashby rows with a non-text `publishedAt` are dropped with a receipt instead of
+  crashing freshness enrichment for the whole refresh.
+- ATS cache writes use a same-directory temporary file and atomic replace, so
+  concurrent refreshes cannot publish a half-written JSON cache.
+
+Proof for this pass:
+
+- `./.venv/bin/python -m pytest --cov=jobhunt --cov=jobs --cov-report=term-missing --cov-fail-under=60 -q` → **205 passed**, **75.29%** total coverage.
+- `npm run test:e2e` → green; desktop/mobile/loading/no-server smoke passed.
+- `./jobs doctor` → green; **241** official ATS companies and no account, API
+  key, paid provider, or browser automation required.
+- `./jobs refresh --no-cache --no-forms` → **438 postings from 121 companies**;
+  **237/241** feeds resolved, with only existing capped-search warnings.
+- Taste lint remains **0 errors, 0 warnings, 0 suggestions**. The unavailable
+  Impeccable source fallback reported the same nine pre-existing visual
+  heuristics; none warranted churn.

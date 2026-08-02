@@ -618,11 +618,38 @@ def _board_contains_id(opp_id: str) -> bool:
 
 # --- helpers ---------------------------------------------------------------
 
-def _load_companies() -> list[dict]:
-    data = json.loads((CONFIG / "companies.json").read_text(encoding="utf-8"))
+def _load_company_catalog() -> list[dict]:
+    """Load and shape-check the public company catalog before using it.
+
+    A malformed catalog is an installation/configuration error, not a reason to
+    let a refresh thread throw an AttributeError halfway through a run.  Keep
+    this validation in one place so ``doctor``, ``configure``, and ``refresh``
+    all give the same actionable message.
+    """
+    path = CONFIG / "companies.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
     companies = data.get("companies", data) if isinstance(data, dict) else data
     if not isinstance(companies, list) or not companies:
         raise ValueError("companies.json must contain a non-empty companies[] list")
+
+    invalid = []
+    for index, company in enumerate(companies, start=1):
+        if not isinstance(company, dict):
+            invalid.append(f"entry {index} must be an object")
+            continue
+        missing = [
+            field for field in ("name", "slug", "ats")
+            if not isinstance(company.get(field), str) or not company[field].strip()
+        ]
+        if missing:
+            invalid.append(f"entry {index} needs non-empty {', '.join(missing)}")
+    if invalid:
+        raise ValueError("companies.json has invalid entries: " + "; ".join(invalid[:5]))
+    return companies
+
+
+def _load_companies() -> list[dict]:
+    companies = _load_company_catalog()
     try:
         requested = _load_profile_raw().get("companies", [])
     except (OSError, ValueError):
@@ -654,6 +681,19 @@ def _load_companies() -> list[dict]:
             raise ValueError("search preferences selected no known companies")
         return selected
     return companies
+
+
+def _validate_company_preferences(values: list[str]) -> None:
+    """Reject unknown shortlist values before writing private config."""
+    catalog = _load_company_catalog()
+    known = {
+        key
+        for company in catalog
+        for key in (company["name"].strip().casefold(), company["slug"].strip().casefold())
+    }
+    missing = [value for value in values if value.strip().casefold() not in known]
+    if missing:
+        raise ValueError("unknown companies: " + ", ".join(missing))
 
 
 def _profile_path() -> Path:
@@ -803,6 +843,12 @@ def cmd_configure(args) -> int:
         if company_raw.strip().lower() != "all" and not config["companies"]:
             err("--companies needs comma-separated names or `all`")
             return 1
+        if config["companies"]:
+            try:
+                _validate_company_preferences(config["companies"])
+            except (OSError, ValueError) as exc:
+                err(f"--companies: {exc}")
+                return 1
         updates = True
 
     if getattr(args, "remote", None) is not None:
@@ -847,6 +893,12 @@ def cmd_configure(args) -> int:
             config["companies"] = (
                 [] if companies.lower() == "all" else _csv_values(companies)
             )
+            if config["companies"]:
+                try:
+                    _validate_company_preferences(config["companies"])
+                except (OSError, ValueError) as exc:
+                    err(f"Companies: {exc}")
+                    return 1
         if remote in {"yes", "y", "no", "n"}:
             config["remote_ok"] = remote in {"yes", "y"}
         if age:
