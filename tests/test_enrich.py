@@ -116,8 +116,14 @@ def test_momentum_counts():
 def test_momentum_delta():
     raw = [opp("FM", company="Acme"), opp("FM2", company="Acme")]
     filt = raw
-    m = enrich.company_momentum(filt, raw, prev={"Acme": {"finance": 1}})
+    m = enrich.company_momentum(filt, raw, prev={"Acme": {"matching": 1}})
     assert m["Acme"]["matching_delta"] == 1
+
+
+def test_legacy_finance_snapshot_does_not_seed_any_role_delta():
+    raw = [opp("Software Engineer", company="Acme")]
+    m = enrich.company_momentum(raw, raw, prev={"Acme": {"finance": 0}})
+    assert m["Acme"]["matching_delta"] is None
 
 
 def test_malformed_momentum_snapshot_is_ignored(tmp_path, monkeypatch):
@@ -126,6 +132,22 @@ def test_malformed_momentum_snapshot_is_ignored(tmp_path, monkeypatch):
     monkeypatch.setattr(enrich, "MOMENTUM_SNAPSHOT", path)
     result = enrich.enrich_all([opp("FM", company="Acme")], [opp("FM", company="Acme")], fit={})
     assert result["connections_loaded"] is False
+
+
+def test_enrich_can_stage_momentum_without_writing_snapshot(tmp_path, monkeypatch):
+    path = tmp_path / ".momentum.json"
+    path.write_text('{"Acme": {"matching": 4, "total": 4}}', encoding="utf-8")
+    monkeypatch.setattr(enrich, "MOMENTUM_SNAPSHOT", path)
+
+    result = enrich.enrich_all(
+        [opp("FM", company="Acme")],
+        [opp("FM", company="Acme")],
+        fit={},
+        persist_snapshot=False,
+    )
+
+    assert result["momentum_snapshot"] == {"Acme": {"matching": 1, "total": 1}}
+    assert path.read_text(encoding="utf-8") == '{"Acme": {"matching": 4, "total": 4}}'
 
 
 def test_freshness_badges():

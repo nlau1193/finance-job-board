@@ -218,7 +218,9 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
     from jobhunt import enrich
     _emit("enriching", 0, len(filtered), "Enriching postings…")
     fit_cfg = _load_profile_raw().get("fit", {})
-    enrich_summary = enrich.enrich_all(filtered, raw, fit=fit_cfg)
+    # Stage the momentum baseline until both fail-closed publication gates and
+    # the board save succeed. An outage must not become next refresh's baseline.
+    enrich_summary = enrich.enrich_all(filtered, raw, fit=fit_cfg, persist_snapshot=False)
 
     now = utc_now()
     merged = store.merge_read_state(filtered, now=now)
@@ -287,6 +289,7 @@ def refresh_board(*, no_cache=False, no_forms=False, progress=None) -> dict:
         )
     _emit("saving", 0, 0, "Saving board…")
     payload = store.save(merged, now=now, meta=meta)
+    enrich.write_momentum_snapshot(enrich_summary.get("momentum_snapshot", {}))
     _build_board(payload)
     _emit("done", len(merged), len(merged), f"{len(merged)} postings from {companies_with} companies")
     return payload

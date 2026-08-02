@@ -121,7 +121,9 @@ def company_momentum(filtered: list[Opportunity], raw_all: list[Opportunity],
     out = {}
     for company in matching:
         prior_data = prev.get(company) or {}
-        prior = prior_data.get("matching", prior_data.get("finance"))
+        # The board is category-neutral. A legacy finance-only baseline cannot
+        # truthfully describe a new all-role search, so it must not seed a delta.
+        prior = prior_data.get("matching")
         delta = (matching[company] - prior) if isinstance(prior, int) else None
         out[company] = {
             "total_roles": total.get(company, matching[company]),
@@ -202,9 +204,37 @@ def freshness(opp: Opportunity, now: datetime | None = None) -> dict:
 
 # --- Orchestrator ----------------------------------------------------------
 
+def momentum_snapshot(momentum: dict) -> dict:
+    """Return the small durable snapshot used for the next refresh delta."""
+    return {
+        company: {
+            "matching": details["matching_roles"],
+            "total": details["total_roles"],
+        }
+        for company, details in momentum.items()
+    }
+
+
+def write_momentum_snapshot(snapshot: dict) -> None:
+    """Persist a snapshot after the caller has accepted the refresh.
+
+    Refresh publication is fail-closed. Keeping this write separate from
+    enrichment prevents a failed/partial refresh from advancing the baseline
+    used to describe next week's momentum.
+    """
+    import json
+
+    try:
+        from .store import atomic_write_text
+        atomic_write_text(MOMENTUM_SNAPSHOT, json.dumps(snapshot))
+    except OSError:
+        pass
+
+
 def enrich_all(filtered: list[Opportunity], raw_all: list[Opportunity], *,
                fit: dict, connections_path: Path = CONNECTIONS_CSV,
-               now: datetime | None = None) -> dict:
+               now: datetime | None = None,
+               persist_snapshot: bool = True) -> dict:
     import json
     prev = {}
     if Path(MOMENTUM_SNAPSHOT).exists():
@@ -233,13 +263,10 @@ def enrich_all(filtered: list[Opportunity], raw_all: list[Opportunity], *,
             "application": application_summary(opp.application),
         }
 
-    # persist snapshot for next refresh's weekly delta
-    try:
-        from .store import atomic_write_text
-        snap = {c: {"matching": m["matching_roles"], "total": m["total_roles"]} for c, m in momentum.items()}
-        atomic_write_text(MOMENTUM_SNAPSHOT, json.dumps(snap))
-    except OSError:
-        pass
+    snap = momentum_snapshot(momentum)
+    if persist_snapshot:
+        write_momentum_snapshot(snap)
 
     return {"connections_loaded": bool(connections),
-            "warm_companies": sum(1 for o in filtered if o.enrichment.get("warm"))}
+            "warm_companies": sum(1 for o in filtered if o.enrichment.get("warm")),
+            "momentum_snapshot": snap}

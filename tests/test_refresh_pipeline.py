@@ -22,7 +22,7 @@ def _posting(job_id="1", title="Product Designer"):
     )
 
 
-def _wire_pipeline(monkeypatch, tmp_path: Path, *, receipts, raw):
+def _wire_pipeline(monkeypatch, tmp_path: Path, *, receipts, raw, mock_enrich=True):
     board_path = tmp_path / "jobs.local.json"
     dismissed_path = tmp_path / "dismissed.json"
     profile_path = tmp_path / "search.json"
@@ -39,7 +39,9 @@ def _wire_pipeline(monkeypatch, tmp_path: Path, *, receipts, raw):
     monkeypatch.setattr(jobs, "_build_board", lambda payload=None: None)
     monkeypatch.setattr(discover, "discover_all", lambda *args, **kwargs: (raw, receipts))
     monkeypatch.setattr(discover, "hydrate_details", lambda candidates, **kwargs: candidates)
-    monkeypatch.setattr(enrich, "enrich_all", lambda filtered, raw, fit: {"connections_loaded": False})
+    if mock_enrich:
+        monkeypatch.setattr(enrich, "enrich_all", lambda filtered, raw, fit, **kwargs: {"connections_loaded": False})
+        monkeypatch.setattr(enrich, "write_momentum_snapshot", lambda snapshot: None)
 
     real_save = store.save
     real_merge = store.merge_read_state
@@ -137,6 +139,7 @@ def test_refresh_pipeline_keeps_last_good_board_on_feed_outage(monkeypatch, tmp_
         tmp_path,
         raw=[],
         receipts=[{"company": "Acme", "ats": "greenhouse", "result": "error", "count": 0}],
+        mock_enrich=False,
     )
     store.save([prior], now="2026-07-30T00:00:00Z")
 
@@ -148,6 +151,31 @@ def test_refresh_pipeline_keeps_last_good_board_on_feed_outage(monkeypatch, tmp_
         raise AssertionError("an all-feed outage must fail closed")
 
     assert store.load_opportunities(board_path)[0].id == prior.id
+
+
+def test_refresh_pipeline_does_not_advance_momentum_on_feed_outage(monkeypatch, tmp_path):
+    """A failed refresh keeps both the board and its previous delta baseline."""
+    import json
+
+    board_path = _wire_pipeline(
+        monkeypatch,
+        tmp_path,
+        raw=[],
+        receipts=[{"company": "Acme", "ats": "greenhouse", "result": "error", "count": 0}],
+    )
+    momentum_path = tmp_path / ".momentum.json"
+    momentum_path.write_text(json.dumps({"Acme": {"matching": 3, "total": 3}}), encoding="utf-8")
+    monkeypatch.setattr(enrich, "MOMENTUM_SNAPSHOT", momentum_path)
+    try:
+        jobs.refresh_board()
+    except RuntimeError as exc:
+        assert "existing board was kept unchanged" in str(exc)
+    else:
+        raise AssertionError("an all-feed outage must fail closed")
+
+    assert json.loads(momentum_path.read_text(encoding="utf-8")) == {
+        "Acme": {"matching": 3, "total": 3},
+    }
 
 
 def test_refresh_pipeline_keeps_last_good_board_on_successful_empty_feed(monkeypatch, tmp_path):
