@@ -20,6 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: python -m pip install -r requirements-dev.txt
+      - run: python -m ruff check jobhunt jobs.py
       - run: python -m pytest --cov=jobhunt --cov=jobs --cov-report=term-missing --cov-fail-under=60 -q
 
   browser:

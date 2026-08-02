@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import shutil
 import sys
 import threading
@@ -25,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from jobhunt.model import ATS_PLATFORMS
+from jobhunt.model import ATS_PLATFORMS  # noqa: E402  (local package after path bootstrap)
 
 CONFIG = ROOT / "config"
 DATA = ROOT / "data"
@@ -487,9 +486,10 @@ def cmd_doctor(args) -> int:
     if sys.version_info >= (3, 10):
         ok(f"Python {pyver}")
     else:
-        err(f"Python {pyver} is too old — need 3.10+"); rc = 1
+        err(f"Python {pyver} is too old — need 3.10+")
+        rc = 1
     in_venv = sys.prefix != getattr(sys, "base_prefix", sys.prefix)
-    ok(f"Running in the project's private environment (.venv)") if in_venv else \
+    ok("Running in the project's private environment (.venv)") if in_venv else \
         warn("Not running inside .venv — `./jobs` normally handles this for you")
 
     if _need_requests():
@@ -505,14 +505,16 @@ def cmd_doctor(args) -> int:
             ats_counts[c.get("ats", "?")] = ats_counts.get(c.get("ats", "?"), 0) + 1
         say(f"     by ATS: {json.dumps(ats_counts)}")
     except Exception as exc:  # noqa: BLE001
-        err(f"config/companies.json: {exc}"); rc = 1
+        err(f"config/companies.json: {exc}")
+        rc = 1
 
     try:
         from jobhunt.filter import Profile
         p = Profile.load(_profile_path())
         ok(f"{_profile_path().relative_to(ROOT)} valid — {len(p.title_keywords)} keywords, locations={p.locations}")
     except Exception as exc:  # noqa: BLE001
-        err(f"search preferences: {exc}"); rc = 1
+        err(f"search preferences: {exc}")
+        rc = 1
 
     ok("No account, API key, paid provider, or browser automation required")
 
@@ -561,7 +563,8 @@ def cmd_doctor(args) -> int:
                 for item in recovery[:15]:
                     say(f"       - {item}")
         except Exception as exc:  # noqa: BLE001
-            err(f"Board data unreadable: {exc}"); rc = 1
+            err(f"Board data unreadable: {exc}")
+            rc = 1
     else:
         warn("No board data yet — run `./jobs refresh`")
 
@@ -1175,8 +1178,10 @@ def main(argv=None) -> int:
         sv.add_argument("--port", type=_port_arg, default=8787, help="port to serve on (default 8787)")
         sv.add_argument("--no-open", action="store_true", help="do not open a browser automatically")
 
-    rd = sub.add_parser("read", help="mark a posting read"); rd.add_argument("id")
-    dm = sub.add_parser("dismiss", help="hide a posting"); dm.add_argument("id")
+    rd = sub.add_parser("read", help="mark a posting read")
+    rd.add_argument("id")
+    dm = sub.add_parser("dismiss", help="hide a posting")
+    dm.add_argument("id")
 
     lk = sub.add_parser("linkedin", help="print optional, ordinary LinkedIn search links")
     lk.add_argument("company", help="company name")

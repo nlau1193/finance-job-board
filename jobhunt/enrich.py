@@ -63,7 +63,8 @@ def fit_assessment(opp: Opportunity, fit: dict) -> dict:
     red_flags = []
     for m in _TENURE_RE.finditer(body):
         if int(m.group(1)) >= 10:
-            red_flags.append(f"asks for {m.group(1)}+ years"); break
+            red_flags.append(f"asks for {m.group(1)}+ years")
+            break
 
     too_junior = any(_has_word(title, t) for t in fit.get("too_junior", []))
     too_senior = any(_has_word(title, t) for t in fit.get("too_senior", []))
