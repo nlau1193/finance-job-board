@@ -497,7 +497,7 @@
     var matchingRoles = countOf(mom.matching_roles);
     if (matchingRoles) {
       var matchingDelta = countOf(mom.matching_delta);
-      var delta = matchingDelta > 0 ? ' <span style="color:var(--green-ink);font-weight:600">+'+matchingDelta+' this week</span>' : '';
+      var delta = matchingDelta > 0 ? ' <span style="color:var(--green-ink);font-weight:600">+'+matchingDelta+' since last refresh</span>' : '';
       cards.push('<div class="ecard"><h4>Company momentum</h4><div class="efact"><span class="lbl">Open roles:</span> '+countOf(mom.total_roles)+'</div><div class="efact"><span class="lbl">Matching your search:</span> '+matchingRoles+delta+'</div></div>');
     }
     return cards.length ? '<div class="rail">'+cards.join("")+'</div>' : '<div class="rail"></div>';
