@@ -142,7 +142,8 @@ try {
       },
       momentum: {
         total_roles: '<svg onload="window.__mom=2">',
-        matching_roles: '<img src=x onerror="window.__mom=1">',
+        matching_roles: 1,
+        matching_delta: 2,
       },
       linkedin: {
         connections: 'javascript:window.__li=1',
@@ -164,6 +165,11 @@ try {
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator("a.apply").count(), 1, "live fixture must expose the exact Apply link");
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
+  const momentumCard = page.locator(".ecard").filter({ hasText: "Company momentum" });
+  assert.match(await momentumCard.textContent(), /\+2 since last refresh/,
+    "momentum delta must describe the refresh baseline it actually measures");
+  assert.doesNotMatch(await momentumCard.textContent(), /this week/,
+    "momentum delta must not claim a seven-day window");
 
   // Browser triage is user-local and hand-editable. A stale/corrupt overlay
   // must not treat the string "false" as truthy and hide a live role.
