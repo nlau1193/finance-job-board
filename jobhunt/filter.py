@@ -54,11 +54,14 @@ _US_MARKERS = (
     "atlanta", "los angeles", "washington", "miami", "dallas", "houston",
     "nationwide", "anywhere in the us",
 )
-# "new york" / "nyc" / the bare "ny" abbreviation (word-boundary matched below).
+# "new york" / "new york city" / "nyc" / the bare "ny" abbreviation
+# (word-boundary matched below).  The first three are one city group for a
+# configurable search: a person who types "NYC" should not lose a listing whose
+# ATS happens to spell the same place "New York" (or vice versa).
 # Deliberately NOT bare "brooklyn"/"manhattan": those collide with Brooklyn, OH
 # (a Cleveland suburb — KeyBank HQ), Manhattan, KS, and Manhattan Beach, CA. Real
 # NYC listings always carry "NY"/"New York", so the borough names add only risk.
-_NYC_MARKERS = ("new york", "nyc")
+_NYC_MARKERS = ("new york", "new york city", "nyc")
 # Specifically-named non-NYC US *cities*. A posting that names one of these and
 # does NOT say "remote" is an onsite role outside NYC — dropped, because the
 # board is NYC + remote/distributed only (even when the text also names the
@@ -105,6 +108,11 @@ _LOC_QUALIFIERS = (
     "various", "multiple", "locations", "location", "other", "flexible",
     "metro", "area", "greater", "based", "site", "us", "u.s", "distributed",
 )
+
+# Location text is the source of truth for this preference.  Do not use the ATS
+# `remote` boolean here: some feeds mark an onsite city role remote, and the
+# existing NYC board contract deliberately does not let that flag rescue it.
+_REMOTE_LOCATION_MARKERS = ("remote", "work at home", "work from home", "home based", "home-based")
 
 
 def _names_specific_city(loc: str) -> bool:
@@ -343,6 +351,42 @@ def _has_word(text: str, term: str) -> bool:
     return re.search(r"\b" + re.escape(term) + r"\b", text) is not None
 
 
+def _has_remote_location_signal(loc: str) -> bool:
+    """True when the ATS location explicitly describes a remote arrangement."""
+    return any(marker in loc for marker in _REMOTE_LOCATION_MARKERS)
+
+
+def _is_remote_only_location(loc: str) -> bool:
+    """True when every listed ATS location is explicitly remote-only.
+
+    A role can list both a local option and a remote option.  Remote exclusions
+    should remove ``Work At Home-New York`` but must not remove a real local
+    choice such as ``New York, NY; Remote - US``.
+    """
+    segments = [part.strip() for part in re.split(r"[;|]+", loc) if part.strip()]
+    if not segments:
+        return False
+    for segment in segments:
+        lower = segment.lower()
+        if "hybrid" in lower or "onsite" in lower or "on-site" in lower:
+            return False
+        if not _has_remote_location_signal(lower):
+            return False
+    return True
+
+
+def _configured_location_matches(loc: str, term: str) -> bool:
+    """Match a configured location, including the common NYC spelling group."""
+    if _has_word(loc, term):
+        return True
+    normalized = re.sub(r"[^a-z]+", " ", term).strip()
+    is_nyc_term = normalized in {
+        "ny", "nyc", "nyc ny", "new york", "new york ny",
+        "new york city", "new york city ny",
+    }
+    return is_nyc_term and any(_has_word(loc, marker) for marker in _NYC_MARKERS)
+
+
 def _keyword_matches(text: str, term: str) -> bool:
     """Match a configurable keyword without turning a short word into a substring."""
     term = (term or "").strip().lower()
@@ -382,11 +426,18 @@ def location_verdict(opp: Opportunity, profile: Profile) -> str:
         term for term in configured_locations
         if term and term != "remote"
     ]
-    if any(_has_word(loc, term) for term in configured):
+
+    has_remote_signal = _has_remote_location_signal(loc)
+    # "Remote: excluded" must win over a matching city name when every listed
+    # option is remote.  ATS feeds often spell remote-only New York roles as
+    # "Work At Home-New York" or "Remote - New York"; mixed local + remote
+    # options remain eligible for an onsite/hybrid search.
+    if not profile.remote_ok and _is_remote_only_location(loc):
+        return "drop"
+    if any(_configured_location_matches(loc, term) for term in configured):
         return "keep"
 
-    is_remote = profile.remote_ok and (
-        "remote" in loc or "work at home" in loc or "work from home" in loc)
+    is_remote = profile.remote_ok and has_remote_signal
     has_foreign = _has_foreign(loc)
     has_us = _has_us_anchor(loc)
     names_city = _names_specific_city(loc)

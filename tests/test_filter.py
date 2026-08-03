@@ -200,6 +200,34 @@ def test_hybrid_non_nyc_hub_is_hard_dropped():
     assert location_verdict(opp("x", location="Hybrid - San Francisco or Remote"), PROFILE) == "keep"
 
 
+def test_nyc_alias_keeps_hybrid_for_a_custom_nyc_search():
+    # A person who types only "NYC" should still see ATS spellings such as
+    # "New York, NY" and "New York City".  This is especially important when
+    # remote roles are excluded: a New York hybrid role is still a local role.
+    nyc_only = Profile(locations=["NYC"], remote_ok=False)
+    assert location_verdict(opp("x", location="Hybrid - New York, NY"), nyc_only) == "keep"
+    assert location_verdict(opp("x", location="New York City, US (Hybrid)"), nyc_only) == "keep"
+    assert location_verdict(opp("x", location="Hybrid - San Francisco, California"), nyc_only) == "drop"
+    labeled_nyc = Profile(locations=["New York, NY"], remote_ok=False)
+    assert location_verdict(opp("x", location="New York City, US (Hybrid)"), labeled_nyc) == "keep"
+    abbreviated_nyc = Profile(locations=["NY"], remote_ok=False)
+    assert location_verdict(opp("x", location="New York City, US (Hybrid)"), abbreviated_nyc) == "keep"
+
+
+def test_remote_excluded_drops_remote_only_new_york_spellings():
+    # The remote toggle is an actual preference, not a hint.  A remote-only ATS
+    # label must not be rescued merely because it also names New York.
+    onsite_or_hybrid = Profile(locations=["new york", "nyc"], remote_ok=False)
+    for loc in (
+        "Work At Home-New York",
+        "Work At Home-Massachusetts; Work At Home-New York",
+        "Remote - New York",
+    ):
+        assert location_verdict(opp("x", location=loc), onsite_or_hybrid) == "drop", loc
+    assert location_verdict(opp("x", location="Hybrid - New York, NY"), onsite_or_hybrid) == "keep"
+    assert location_verdict(opp("x", location="New York, NY; Remote - US"), onsite_or_hybrid) == "keep"
+
+
 def test_jd_rescues_onsite_city_when_remote_or_ny():
     # 2026-07-07: remote-first employers post an HQ city in the location field but
     # the JD says the role is remote/NY-eligible. Scan the JD to rescue it.
