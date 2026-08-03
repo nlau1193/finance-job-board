@@ -363,7 +363,14 @@ def _is_remote_only_location(loc: str) -> bool:
     should remove ``Work At Home-New York`` but must not remove a real local
     choice such as ``New York, NY; Remote - US``.
     """
-    segments = [part.strip() for part in re.split(r"[;|]+", loc) if part.strip()]
+    # ATS feeds use semicolons, pipes, slashes, and plain-language "or/and"
+    # separators for alternatives.  Do not split commas: ``Remote - New York,
+    # NY`` is one remote-only label, not a remote option plus a local option.
+    segments = [
+        part.strip()
+        for part in re.split(r"[;|/]+|\s+(?:or|and)\s+", loc)
+        if part.strip()
+    ]
     if not segments:
         return False
     for segment in segments:
@@ -379,12 +386,16 @@ def _configured_location_matches(loc: str, term: str) -> bool:
     """Match a configured location, including the common NYC spelling group."""
     if _has_word(loc, term):
         return True
-    normalized = re.sub(r"[^a-z]+", " ", term).strip()
-    is_nyc_term = normalized in {
+    return _is_nyc_configured_term(term) and any(_has_word(loc, marker) for marker in _NYC_MARKERS)
+
+
+def _is_nyc_configured_term(term: str) -> bool:
+    """True when a configured label clearly denotes the New York City market."""
+    normalized = re.sub(r"[^a-z]+", " ", str(term).lower()).strip()
+    return normalized in {
         "ny", "nyc", "nyc ny", "new york", "new york ny",
         "new york city", "new york city ny",
     }
-    return is_nyc_term and any(_has_word(loc, marker) for marker in _NYC_MARKERS)
 
 
 def _keyword_matches(text: str, term: str) -> bool:
@@ -513,8 +524,8 @@ def jd_allows_remote_or_ny(
         return False
     text = _TAG_RE.sub(" ", description_html)
     allow_remote = profile is None or profile.remote_ok
-    configured = set(profile.locations) if profile is not None else {"new york", "nyc", "ny"}
-    allow_ny = bool(configured & {"new york", "nyc", "ny"})
+    configured = profile.locations if profile is not None else ["new york", "nyc", "ny"]
+    allow_ny = any(_is_nyc_configured_term(term) for term in configured)
     return bool(
         (allow_remote and _JD_REMOTE_SIGNALS.search(text))
         or (allow_ny and _JD_NY_SIGNAL.search(text))

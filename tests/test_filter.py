@@ -226,6 +226,12 @@ def test_remote_excluded_drops_remote_only_new_york_spellings():
         assert location_verdict(opp("x", location=loc), onsite_or_hybrid) == "drop", loc
     assert location_verdict(opp("x", location="Hybrid - New York, NY"), onsite_or_hybrid) == "keep"
     assert location_verdict(opp("x", location="New York, NY; Remote - US"), onsite_or_hybrid) == "keep"
+    assert location_verdict(opp("x", location="New York / Remote - US"), onsite_or_hybrid) == "keep"
+    assert location_verdict(opp("x", location="New York or Remote - US"), onsite_or_hybrid) == "keep"
+    assert location_verdict(
+        opp("x", location="San Francisco, CA, New York, NY, Portland, OR, or Remote within Canada or United States"),
+        Profile(locations=["NYC"], remote_ok=False),
+    ) == "keep"
 
 
 def test_jd_rescues_onsite_city_when_remote_or_ny():
@@ -241,6 +247,11 @@ def test_jd_rescues_onsite_city_when_remote_or_ny():
         "<p>For roles based in San Francisco or New York City, the base range is…</p>")
     assert jd_allows_remote_or_ny(
         "<p>Exceptional candidates in NYC or Washington, DC will also be considered.</p>")
+    for locations in (["NYC"], ["New York, NY"], ["New York City"], ["NY"]):
+        assert jd_allows_remote_or_ny(
+            "<p>Candidates in New York City will also be considered.</p>",
+            Profile(locations=list(locations), remote_ok=False),
+        )
     # Bare NY *mentions* (boilerplate) do NOT rescue — this was the false-positive
     # class (HQ blurb, office list, NYC Local Law 144 notice).
     assert not jd_allows_remote_or_ny(
