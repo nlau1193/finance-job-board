@@ -101,7 +101,7 @@ try {
   assert.equal(await detail.getAttribute("inert"), null);
 
   await page.locator("#q").fill("Product");
-  assert.equal(await page.locator("#list .row").count(), 1, "sample search should find Product Designer");
+  assert.ok(await page.locator("#list .row").count() >= 1, "sample search should find Product Designer");
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator(".sample-apply").count(), 1, "demo detail must explain that Apply is disabled");
   assert.equal(await page.locator("a.apply").count(), 0, "demo data must not expose a fake Apply link");
@@ -127,8 +127,8 @@ try {
     dismissed: false,
     enrichment: {
       fit: {
-        bucket: '<img src=x onerror="window.__fit=1">',
-        why: [],
+        bucket: 'APPLY',
+        why: ['<img src=x onerror="window.__fit=1">'],
         red_flags: [],
         missing: [],
       },
@@ -137,7 +137,7 @@ try {
         people: [],
       },
       application: {
-        effort: '<img src=x onerror="window.__app=1">',
+        effort: 'light',
         prompt_count: '<img src=x onerror="window.__app2=1">',
       },
       momentum: {
@@ -150,6 +150,9 @@ try {
         recruiters: 'https://evil.example/redirect',
       },
     },
+    description_html: '<p>Salary 400M in the first year. Build a durable operating model for the team.</p>',
+    tags: ['operating model', 'planning'],
+    workplace_type: 'Hybrid',
   };
   writeFileSync(path.join(runRoot, "data", "jobs.local.json"), JSON.stringify({
     version: 1,
@@ -162,9 +165,22 @@ try {
   assert.doesNotMatch(await page.locator("#status").textContent(), /Demo data/);
   await page.locator("#q").fill("Finance");
   assert.equal(await page.locator("#list .row").count(), 1, "department must be searchable");
+  await page.locator("#q").fill("400M");
+  assert.equal(await page.locator("#list .row").count(), 1, "posting description must be searchable");
+  await page.locator("#q").fill("operating model");
+  assert.equal(await page.locator("#list .row").count(), 1, "posting tags must be searchable");
+  await page.locator("#q").fill("zzzz-no-such-role");
+  assert.equal(await page.locator("#list .row").count(), 0, "unmatched live search should show an empty state");
+  assert.equal(await page.locator("#clear-filters").textContent(), "Clear filters");
+  await page.locator("#clear-filters").click();
+  assert.equal(await page.locator("#list .row").count(), 1, "clear filters should restore the live posting");
+  await page.locator("#q").fill("Finance");
   await page.locator("#list .row").first().click();
   assert.equal(await page.locator("a.apply").count(), 1, "live fixture must expose the exact Apply link");
   assert.equal(await page.locator('[data-act="applied"]').textContent(), "Mark applied");
+  assert.equal(await page.locator(".fitpill").textContent(), "Good match", "fit labels should be plain language");
+  assert.match(await page.locator(".fitpill").getAttribute("aria-label"), /Good match/);
+  assert.match(await page.locator(".effpill").getAttribute("aria-label"), /question/);
   const momentumCard = page.locator(".ecard").filter({ hasText: "Company momentum" });
   assert.match(await momentumCard.textContent(), /\+2 since last refresh/,
     "momentum delta must describe the refresh baseline it actually measures");
@@ -175,6 +191,13 @@ try {
   // must not treat the string "false" as truthy and hide a live role.
   const profileKey = await page.evaluate(() => JSON.parse(document.getElementById("board-data").textContent).meta.search_profile_key);
   const malformedStateId = live.id;
+  await page.evaluate(({ profileKey, id }) => {
+    const d = new Date();
+    const legacyToday = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    localStorage.setItem(`job-hunt-board-state-v2:${profileKey}`, JSON.stringify({ [id]: { applied: legacyToday } }));
+  }, { profileKey, id: malformedStateId });
+  await page.reload({ waitUntil: "networkidle" });
+  assert.match(await page.locator("#status").textContent(), /Applied today\s+1/, "older unpadded applied dates should still count today");
   await page.evaluate(({ profileKey, id }) => {
     localStorage.setItem(`job-hunt-board-state-v2:${profileKey}`, JSON.stringify({
       [id]: { read: "false", dismissed: "false", applied: "false" },

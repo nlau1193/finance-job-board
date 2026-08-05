@@ -44,7 +44,14 @@
   .toggle { display:inline-flex; align-items:center; gap:8px; user-select:none; }
   .toggle input { width:16px; height:16px; accent-color:var(--green); margin:0; }
   .count { color:var(--ink-soft); font-size:13px; margin:2px 0 14px; }
+  .empty-actions { display:flex; justify-content:center; margin-top:18px; }
+  .empty-clear { min-height:44px; padding:10px 14px; border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); font:600 13px var(--sans); cursor:pointer; }
+  .empty-clear:hover { border-color:var(--ink-soft); background:var(--paper-raised); }
   .state-notice { margin:0 0 14px; padding:9px 12px; border:1px solid #e8d6a8; border-radius:10px; background:var(--amber-soft); color:var(--amber); font-size:13px; }
+  .health-details { margin-top:10px; color:var(--ink-soft); font-size:13px; }
+  .health-details summary { width:fit-content; cursor:pointer; color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:2px; }
+  .health-details ul { margin:8px 0 0 18px; padding:0; }
+  .health-details li + li { margin-top:4px; }
 
   .layout { display:grid; grid-template-columns:minmax(300px,340px) 1fr; gap:18px; align-items:start; }
   .list { display:flex; flex-direction:column; gap:10px; max-height:calc(100vh - 40px); overflow:auto; padding-right:4px; }
@@ -202,7 +209,7 @@
   <div class="controls" role="search">
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <input id="q" type="search" placeholder="Search role, company, location&hellip;" aria-label="Search postings">
+      <input id="q" type="search" placeholder="Search roles, companies, locations, skills&hellip;" aria-label="Search roles, companies, locations, skills, and posting text">
     </label>
     <select id="sort" aria-label="Sort">
       <option value="newest">Newest first</option>
@@ -289,7 +296,11 @@
     overlay = storedOverlay;
   } catch (e) { overlay = {}; }
   function saveOverlay() { try { localStorage.setItem(LS_KEY, JSON.stringify(overlay)); } catch (e) {} }
-  function todayKey() { var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+  function dateKey(value) {
+    var match = String(value || "").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    return match ? match[1]+"-"+String(match[2]).padStart(2,"0")+"-"+String(match[3]).padStart(2,"0") : null;
+  }
+  function todayKey() { var d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   function stateOf(j) {
     var o = overlay[j.id];
     if (!o || typeof o !== "object" || Array.isArray(o)) o = {};
@@ -299,7 +310,7 @@
     return {
       read: typeof o.read === "boolean" ? o.read : j.read === true,
       dismissed: typeof o.dismissed === "boolean" ? o.dismissed : j.dismissed === true,
-      applied: typeof o.applied === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(o.applied) ? o.applied : null,
+      applied: typeof o.applied === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(o.applied) ? dateKey(o.applied) : null,
     };
   }
   function setState(id, patch) { overlay[id] = Object.assign({}, overlay[id], patch); saveOverlay(); render(); }
@@ -312,7 +323,7 @@
         if (!response.ok) throw new Error("dismiss_http_" + response.status);
       });
   }
-  function appliedToday() { var t = todayKey(); return Object.keys(overlay).filter(function (k){ return overlay[k] && overlay[k].applied === t; }).length; }
+  function appliedToday() { var t = todayKey(); return Object.keys(overlay).filter(function (k){ return overlay[k] && dateKey(overlay[k].applied) === t; }).length; }
 
   var $ = function (id) { return document.getElementById(id); };
   var listEl = $("list"), detailEl = $("detail"), countEl = $("count"), statusEl = $("status"), stateNoticeEl = $("state-notice");
@@ -358,6 +369,31 @@
     return /^https:\/\/(?:www\.)?linkedin\.com(?:\/|$)/i.test(url) ? url : "";
   }
 
+  function formatStamp(iso) {
+    var t = iso ? new Date(iso).getTime() : NaN;
+    if (isNaN(t)) return "unknown time";
+    var d = new Date(t);
+    return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")+
+      " "+String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")+" UTC";
+  }
+
+  function refreshDetailsHtml(errors, warnings) {
+    var items = [];
+    (errors || []).forEach(function (item) {
+      var company = item && item.company ? item.company : "A company feed";
+      items.push('<li><strong>'+esc(company)+'</strong> could not be checked. Try Refresh again.</li>');
+    });
+    (warnings || []).forEach(function (item) {
+      var company = item && item.company ? item.company : "A company feed";
+      var text = String(item && item.warning || "").toLowerCase().indexOf("capped") >= 0
+        ? "The search returned the newest available roles only."
+        : "The refresh added a note for this feed.";
+      items.push('<li><strong>'+esc(company)+'</strong> — '+text+'</li>');
+    });
+    if (!items.length) return "";
+    return '<details class="health-details"><summary>See refresh details</summary><ul>'+items.join("")+'</ul><p>Use Refresh to try unavailable feeds again. The board keeps the roles it did load.</p></details>';
+  }
+
   function renderStatus() {
     var companies = meta.companies_with_postings != null ? countOf(meta.companies_with_postings) : new Set(jobs.map(function (j){return j.company;})).size;
     var sample = meta.sample === true;
@@ -369,21 +405,21 @@
     var cls = jobs.length===0?"empty":(sample?"sample":(stale?"stale":(partial?"partial":""))), line;
     if (sample) {
       if (eyebrowEl) eyebrowEl.textContent = "Demo data · refresh before applying";
-      line='<strong>Demo data</strong> <span class="sep">·</span><strong>'+jobs.length+' fictional postings</strong> <span class="sep">·</span><span class="muted">run <code>./jobs refresh</code> for live jobs</span>';
+      line='<strong>Demo data</strong> <span class="sep">·</span><strong>'+jobs.length+' fictional postings</strong> <span class="sep">·</span><span class="muted">use Refresh for live jobs</span>';
     } else if (eyebrowEl) {
       eyebrowEl.textContent = "Official careers data · your titles · your locations";
     }
-    if (!sample && jobs.length===0) line='<span class="muted">No postings loaded &mdash; run <code>./jobs refresh</code></span>';
-    else if (!sample && stale) line='<strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">data is '+Math.round(ageDays(payload.generated_at))+' days old — run <code>./jobs refresh</code></span>';
-    else if (!sample && !stale) line='Live official careers data <span class="sep">·</span><strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">updated '+relTime(payload.generated_at)+'</span>';
+    if (!sample && jobs.length===0) line='<span class="muted">No postings loaded &mdash; use Refresh to load live roles</span>';
+    else if (!sample && stale) line='<strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">data is '+Math.round(ageDays(payload.generated_at))+' days old · last refreshed '+esc(formatStamp(payload.generated_at))+' · use Refresh to update</span>';
+    else if (!sample && !stale) line='Live official careers data <span class="sep">·</span><strong>'+jobs.length+' postings</strong> from '+companies+' companies <span class="sep">·</span><span class="muted">updated '+relTime(payload.generated_at)+' ('+esc(formatStamp(payload.generated_at))+')</span>';
     if (!sample && (warnings.length || errors.length)) {
       var health = [];
       var warningCounts = warningCountsOf(warnings);
-      if (errors.length) health.push(errors.length+" feeds unavailable");
-      if (warningCounts.cap) health.push(warningCounts.cap+" feeds capped");
+      if (errors.length) health.push(errors.length+" company feeds need another try");
+      if (warningCounts.cap) health.push(warningCounts.cap+" searches limited");
       if (warningCounts.security) health.push(warningCounts.security+" safety checks");
-      if (warningCounts.other) health.push(warningCounts.other+" refresh notes");
-      line += ' <span class="sep">·</span><span class="muted">'+health.join(" · ")+' — run <code>./jobs doctor</code></span>';
+      if (warningCounts.other) health.push(warningCounts.other+" additional notes");
+      line += ' <span class="sep">·</span><span class="muted">'+health.join(" · ")+' — see refresh details below</span>';
     }
     var lane = '<span class="applylane">★ Applied today <span class="ring">'+appliedToday()+'</span></span>';
     statusEl.innerHTML = '<span class="status '+cls+'"><span class="dot"></span>'+line+'</span>'+lane;
@@ -393,11 +429,11 @@
       } else {
         var noteParts = [];
         var noteCounts = warningCountsOf(warnings);
-        if (errors.length) noteParts.push(errors.length+' feeds were unavailable');
-        if (noteCounts.cap) noteParts.push(noteCounts.cap+' feeds were capped');
+        if (errors.length) noteParts.push(errors.length+' company feeds need another try');
+        if (noteCounts.cap) noteParts.push(noteCounts.cap+' searches returned the newest roles only');
         if (noteCounts.security) noteParts.push(noteCounts.security+' safety checks held links for review');
-        if (noteCounts.other) noteParts.push(noteCounts.other+' refresh notes');
-        var healthNote = noteParts.length ? ' <strong>Refresh note:</strong> '+noteParts.join(' and ')+'. Run <code>./jobs doctor</code> for details.' : '';
+        if (noteCounts.other) noteParts.push(noteCounts.other+' additional notes');
+        var healthNote = noteParts.length ? ' <strong>Refresh note:</strong> '+noteParts.join(' and ')+'.'+refreshDetailsHtml(errors, warnings) : '';
         var compactNote = compacted ? ' <strong>Large board:</strong> descriptions and form questions are shortened so search stays responsive; open the official posting for the full text.' : '';
         boardNoteEl.innerHTML = '<strong>How this board works.</strong> Every live role comes from a company\'s official careers feed, with the full posting text when that feed provides it. The detail view adds fit, pay, freshness, and—only if you add a private connections CSV—people you know. <strong>Apply</strong> opens the exact posting.'+healthNote+compactNote+'<br><strong>Before you apply:</strong> confirm it\'s still open. Fit and connection matches are decision support, not gospel. This tool only <em>discovers</em>; it never applies, messages, logs into, or automates LinkedIn.';
       }
@@ -433,13 +469,14 @@
     if (warmCount) bits.push('<span class="warmdot">★ '+warmCount+' you know</span>');
     if (st.applied) bits.push('<span class="applied-tag">✓ APPLIED</span>');
     var fitBucket = fitBucketOf(fit);
-    var pill = fitBucket ? '<span class="fitpill fit-'+esc(fitBucket)+'">'+esc(fitBucket)+'</span>' : '';
+    var fitLabel = fitBucket === 'APPLY' ? 'Good match' : fitBucket === 'STRETCH' ? 'Stretch' : 'Lower match';
+    var pill = fitBucket ? '<span class="fitpill fit-'+esc(fitBucket)+'" aria-label="Fit: '+esc(fitLabel)+'">'+esc(fitLabel)+'</span>' : '';
     var appS = e.application || {}, effort = effortOf(appS), effPill = '';
     if (effort === 'quick') {
-      effPill = '<span class="effpill eff-quick" title="Resume only — no written questions">⚡ Quick</span>';
+      effPill = '<span class="effpill eff-quick" aria-label="Quick apply: resume only" title="Resume only — no written questions">⚡ Quick apply</span>';
     } else if (effort) {
       var nq = countOf(appS.prompt_count);
-      effPill = '<span class="effpill eff-'+effort+'" title="'+nq+' written question'+(nq===1?'':'s')+' to prep before applying">✍ '+nq+' Q</span>';
+      effPill = '<span class="effpill eff-'+effort+'" aria-label="'+nq+' written question'+(nq===1?'':'s')+' to prepare" title="'+nq+' written question'+(nq===1?'':'s')+' to prep before applying">✍ '+nq+' question'+(nq===1?'':'s')+'</span>';
     }
     return '<button id="job-row-'+esc(j.id)+'" class="'+cls+'" role="option" tabindex="-1" aria-selected="'+(j.id===selectedId)+'" data-id="'+esc(j.id)+'">'+
       '<div class="row-top"><span class="row-company">'+esc(j.company)+'</span><span class="row-pills">'+effPill+pill+'</span></div>'+
@@ -466,11 +503,12 @@
     // Fit & triage
     var fitBucket = fitBucketOf(fit);
     if (fitBucket) {
+      var fitLabel = fitBucket === 'APPLY' ? 'Good match' : fitBucket === 'STRETCH' ? 'Stretch' : 'Lower match';
       var col = fitBucket==='APPLY'?'background:var(--green-soft);color:var(--green-ink)':fitBucket==='STRETCH'?'background:var(--amber-soft);color:var(--amber)':'background:#efe9dd;color:var(--ink-soft)';
       var why = (fit.why||[]).map(function (w){ return '<span class="echip">'+esc(w)+'</span>'; }).join("");
       var flags = (fit.red_flags||[]).map(function (f){ return '<span class="echip flag">'+esc(f)+'</span>'; }).join("");
       var miss = (fit.missing||[]).map(function (m){ return '<span class="echip miss">mentions '+esc(m)+'</span>'; }).join("");
-      cards.push('<div class="ecard"><h4>Fit</h4><span class="fitbig" style="'+col+'">'+esc(fitBucket)+(fitBucket==='APPLY'?' NOW':'')+'</span><div>'+why+flags+miss+'</div><div class="estale" style="margin-top:6px">APPLY = matches your search · STRETCH = senior or missing one · SKIP = below your level</div></div>');
+      cards.push('<div class="ecard"><h4>Fit</h4><span class="fitbig" style="'+col+'">'+esc(fitLabel)+(fitBucket==='APPLY'?' · apply first':'')+'</span><div>'+why+flags+miss+'</div></div>');
     }
     // Application form preview — what applying actually asks for
     var app = j.application || {}, appS = e.application || {}, effort = effortOf(appS);
@@ -531,6 +569,18 @@
       '<div class="d-body">'+desc+railHtml(j)+'</div></div>';
   }
 
+  function searchTextOf(j) {
+    var values = [j.title, j.company, j.location, j.team, j.department, j.workplace_type,
+      j.employment_type, j.compensation, (j.tags || []).join(" "), j.description_html];
+    return values.map(function (value) { return String(value || "").replace(/<[^>]*>/g, " "); }).join(" ").toLowerCase();
+  }
+  function hasActiveFilters() {
+    return !!((q.value || "").trim() || companyFilter.value || hideRead.checked || hideDismissed.checked);
+  }
+  function filterNote(shown) {
+    var notShown = jobs.length - shown;
+    return hasActiveFilters() && notShown > 0 ? " · "+notShown+" not shown by filters" : "";
+  }
   function visibleJobs() {
     var term=(q.value||"").trim().toLowerCase(), comp=companyFilter.value, hr=hideRead.checked, hd=hideDismissed.checked;
     var arr = jobs.filter(function (j) {
@@ -538,7 +588,7 @@
       if (hd && st.dismissed) return false;
       if (hr && st.read) return false;
       if (comp && j.company !== comp) return false;
-      if (term) { var hay=(j.title+" "+j.company+" "+(j.location||"")+" "+(j.team||"")+" "+(j.department||"")).toLowerCase(); if (hay.indexOf(term)===-1) return false; }
+      if (term && searchTextOf(j).indexOf(term)===-1) return false;
       return true;
     });
     var mode = sortSel.value;
@@ -630,14 +680,14 @@
     if (jobs.length===0) {
       if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
       listEl.setAttribute("aria-activedescendant", "");
-      listEl.innerHTML='<div class="empty-state"><h2>No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div>';
-      detailEl.innerHTML='<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">No postings loaded yet</h2><p>Run <code>./jobs refresh</code>, then reopen this board.</p></div></div>'; syncDetailAccessibility(); countEl.textContent=""; return;
+      listEl.innerHTML='<div class="empty-state"><h2>No postings loaded yet</h2><p>Use Refresh to load live roles, then reopen this board.</p></div>';
+      detailEl.innerHTML='<div class="detail-inner detail-empty"><div class="empty-state"><h2 id="detail-title">No postings loaded yet</h2><p>Use Refresh to load live roles, then reopen this board.</p></div></div>'; syncDetailAccessibility(); countEl.textContent=""; return;
     }
     if (shown.length===0) {
       if (mobile && document.body.classList.contains("detail-open")) closeDetail(false);
       listEl.setAttribute("aria-activedescendant", "");
-      listEl.innerHTML='<div class="empty-state"><h2>Nothing matches</h2><p>No roles match your filters. Clear search, show read/dismissed, or run <code>./jobs refresh</code>.</p></div>';
-      selectedId=null; renderDetail(); countEl.textContent="Showing 0 of "+jobs.length+" postings"; return;
+      listEl.innerHTML='<div class="empty-state"><h2>Nothing matches</h2><p>No roles match these filters. Clear the search or show read and dismissed roles to keep browsing.</p><div class="empty-actions"><button class="empty-clear" id="clear-filters" type="button">Clear filters</button></div></div>';
+      selectedId=null; renderDetail(); countEl.textContent="Showing 0 of "+jobs.length+" postings"+filterNote(0); return;
     }
     var page = shown.slice(0, visibleLimit);
     var selectedVisible = page.some(function (j){return j.id===selectedId;});
@@ -648,8 +698,8 @@
       listEl.innerHTML += '<button class="show-more" id="show-more" type="button">Show next '+Math.min(PAGE_SIZE, remaining)+' roles <span>('+remaining+' more)</span></button>';
     }
     countEl.textContent = shown.length > page.length
-      ? "Showing first "+page.length+" of "+shown.length+" matching postings"
-      : "Showing "+shown.length+" of "+jobs.length+" postings";
+      ? "Showing first "+page.length+" of "+shown.length+" matching postings"+filterNote(shown.length)
+      : "Showing "+shown.length+" of "+jobs.length+" postings"+filterNote(shown.length);
     if (!selectedVisible) selectedId = mobile ? null : page[0].id;
     if (selectedId) { var act=listEl.querySelector('.row[data-id="'+cssEscape(selectedId)+'"]'); if (act) { act.classList.add("active"); act.setAttribute("aria-selected","true"); listEl.setAttribute("aria-activedescendant", act.id); } else listEl.setAttribute("aria-activedescendant", ""); }
     renderDetail();
@@ -657,6 +707,8 @@
   function cssEscape(s){ return String(s).replace(/["\\\]]/g, "\\$&"); }
 
   listEl.addEventListener("click", function (e) {
+    var clear = e.target.closest("#clear-filters");
+    if (clear) { q.value=""; companyFilter.value=""; sortSel.value="newest"; hideRead.checked=false; hideDismissed.checked=false; refreshVisibleJobs(); q.focus(); return; }
     var more = e.target.closest("#show-more");
     if (more) { visibleLimit += PAGE_SIZE; render(); return; }
     var btn=e.target.closest(".row"); if (btn) selectJob(btn.getAttribute("data-id"));
@@ -849,10 +901,10 @@
       var r = s.result || {};
       if (r.postings != null) {
         var health = [];
-        if (r.errors) health.push(r.errors + " feeds unavailable");
-        if (r.warnings) health.push(r.warnings + " refresh notes");
+        if (r.errors) health.push(r.errors + " company feeds need another try");
+        if (r.warnings) health.push(r.warnings + " searches or feeds have notes");
         rfSubmsg.textContent = "Found " + r.postings + " postings from " + (r.companies != null ? r.companies : "your") + " companies." +
-          (health.length ? " " + health.join(" and ") + ". See the board note or ./jobs doctor." : "");
+          (health.length ? " " + health.join(" and ") + ". See refresh details on the board." : "");
       } else {
         rfSubmsg.textContent = "";
       }
