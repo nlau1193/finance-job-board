@@ -73,7 +73,7 @@ def test_render_empty_board(tmp_path):
     html = out.read_text(encoding="utf-8")
     assert '"opportunities":[]' in html.replace(" ", "")
     assert "No postings loaded" in html  # empty-state copy is in the template
-    assert "./jobs refresh" in html
+    assert "Use Refresh to load live roles" in html
 
 
 def test_sample_board_cannot_offer_a_real_apply_destination():

@@ -1,15 +1,15 @@
 # Job Hunt Board
 
-A small, local-first job-hunt workspace that collects real openings for any
-kind of role from official company applicant-tracking systems (ATS). Search
-and filter in one calm board, open the exact application, and keep your triage
-on your own Mac.
+A small, local-first job-hunt workspace for any kind of role. It collects real
+openings from official company applicant-tracking systems (ATS), then gives you
+one calm place to search, filter, open the exact application, and keep your
+job-search choices on your own Mac.
 
-The product is called `job-board` and is intentionally not limited to one
-field: start with the public title list empty to see every kind of job, or add
-the titles and keywords you want. The current public GitHub URL is still
-`github.com/nlau1193/finance-job-board` while the repository owner completes
-the requested rename; use the **Code** menu on that page for the clone command.
+This is not a finance-only board. Leave the title list empty to see every kind
+of job, or add the titles and keywords you care about. The public GitHub URL
+still uses the older `finance-job-board` name while the repository owner
+finishes the rename; use that page's **Code** menu for the clone or download
+command.
 
 ## The easiest setup
 
@@ -18,8 +18,8 @@ Open this folder in Codex and ask:
 > Set up this job board and start it for me.
 
 Codex can run the same commands shown below and diagnose anything that does not
-work. Codex is only a convenient installer; the board itself does not use AI.
-It has no account, API key, paid service, or subscription.
+work. It is only a setup helper; the board itself does not use AI. There is no
+account, API key, paid service, or subscription.
 
 ## Install it yourself
 
@@ -43,10 +43,9 @@ should not filter the board.
 running and use the board’s **Refresh** button whenever you want current jobs.
 
 Refresh reads only official Greenhouse, Ashby, Lever, and Workday feeds. It
-re-reads your private preferences, filters the fresh postings, preserves read
-and dismissed state, and keeps the last good board if the network is down or
-too many company feeds fail. There is no crawler, browser robot, model, or paid
-fallback.
+uses your private preferences, keeps read and dismissed choices, and keeps the
+last good board if the network is down or too many company feeds fail. There is
+no crawler, browser robot, model, or paid fallback.
 
 For a very large all-role board, the browser receives short description and
 application previews so search stays responsive. The complete ATS data remains
